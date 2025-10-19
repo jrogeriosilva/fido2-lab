@@ -22,6 +22,8 @@ import AssertionDisplay from './components/AssertionDisplay';
 import ModeSelector from './components/ModeSelector';
 import KeyGeneratorButton from './components/KeyGeneratorButton';
 import CredentialManager from './components/CredentialManager';
+import Base64Decoder from './components/Base64Decoder';
+import AttestationObjectDecoder from './components/AttestationObjectDecoder';
 
 const theme = createTheme({
   palette: {
@@ -143,6 +145,8 @@ function App() {
               >
                 <Tab label="➕ Create Credentials" />
                 <Tab label="✍️ Fido-Sign" />
+                <Tab label="🔤 Base64 Tool" />
+                <Tab label="🔍 Attestation Decoder" />
                 <Tab label="⚙️ Settings" />
               </Tabs>
             </Box>
@@ -173,6 +177,22 @@ function App() {
               )}
 
               {activeTab === 2 && (
+                <>
+                  <Typography variant="h6" gutterBottom>
+                  </Typography>
+                  <Base64Decoder />
+                </>
+              )}
+
+              {activeTab === 3 && (
+                <>
+                  <Typography variant="h6" gutterBottom>
+                  </Typography>
+                  <AttestationObjectDecoder />
+                </>
+              )}
+
+              {activeTab === 4 && (
                 <>
                   <Typography variant="h6" gutterBottom>
                   </Typography>
