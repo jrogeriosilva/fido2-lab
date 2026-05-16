@@ -145,6 +145,9 @@ function CreateCredentialForm({ mode, onCredentialCreated }) {
             publicKey: key.publicKey,
             privateKey: key.privateKey
           };
+          // Use the algorithm from the selected key instead of from pubKeyCredParams
+          // to ensure consistency between the key type and algorithm
+          algorithm = key.algorithm;
         } else {
           throw new Error('Selected key not found');
         }

@@ -15,6 +15,8 @@ import {
   DialogActions
 } from '@mui/material';
 import { Delete, Visibility, ContentCopy } from '@mui/icons-material';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { getCredentials, deleteCredential, clearAllCredentials } from '../utils/localStorage';
 
 function CredentialManager({ refreshKey }) {
@@ -153,26 +155,60 @@ function CredentialManager({ refreshKey }) {
         onClose={() => setDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#1a1a1a',
+            backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02))',
+            borderRadius: 2
+          }
+        }}
       >
-        <DialogTitle>Credential Details</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{
+          fontWeight: 600,
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          pb: 2
+        }}>
+          Credential Details
+        </DialogTitle>
+        <DialogContent sx={{
+          pt: 3,
+          '& pre': {
+            margin: 0
+          }
+        }}>
           {selectedCredential && (
-            <Box
-              component="pre"
-              sx={{
-                p: 2,
-                bgcolor: 'grey.100',
-                borderRadius: 1,
-                overflow: 'auto',
-                fontSize: '0.875rem'
+            <SyntaxHighlighter
+              language="json"
+              style={vscDarkPlus}
+              customStyle={{
+                margin: 0,
+                padding: '16px',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                backgroundColor: '#000000',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
               }}
             >
               {JSON.stringify(selectedCredential, null, 2)}
-            </Box>
+            </SyntaxHighlighter>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Close</Button>
+        <DialogActions sx={{
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          pt: 2,
+          px: 3,
+          pb: 2
+        }}>
+          <Button
+            onClick={() => setDialogOpen(false)}
+            variant="outlined"
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600
+            }}
+          >
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
