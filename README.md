@@ -1,32 +1,36 @@
-# FIDO2 Credential Manager
+# FIDO2 Lab
 
-A testing client for FIDO2 server applications built with React, Vite, and Material-UI. This application allows you to create and test FIDO2 credentials using either real hardware authenticators or simulated credentials.
+A browser-based testing client for FIDO2 server applications. Test registration and authentication flows using real hardware authenticators or fully simulated credentials — no hardware required.
 
 ## Features
 
-- **Challenge Input**: Input FIDO2 challenges from your server (base64url or plain text)
-- **Dual Mode Support**:
-  - **Hardware API Mode**: Use real hardware authenticators (security keys, platform authenticators)
-  - **Simulated Mode**: Create simulated credentials without hardware using cryptographic keys
-- **Key Generator**: Pre-generate RS256 or ES256 key pairs for simulated credentials
-- **Credential Management**: Store, view, and manage credentials in localStorage
-- **Assertion Generation**: Sign challenges with stored credentials to create FIDO2 assertions
-- **Collapsible Assertion Display**: View generated assertions with copy-to-clipboard functionality
+- **Dual Mode**: Switch between Simulated (SubtleCrypto) and Hardware (WebAuthn API) at any time via the header dropdown
+- **Create Credential**: Register new FIDO2 credentials with configurable RP, user, and algorithm settings
+- **Sign / Assert**: Select a stored credential and sign a challenge to produce a WebAuthn assertion
+- **Key Generator**: Pre-generate ES256 or RS256 key pairs for reuse across credential creation
+- **Base64 Tool**: Encode/decode base64url strings inline
+- **Attestation Decoder**: Parse and inspect CBOR attestation objects
+- **Credential Manager**: View, inspect, and delete stored credentials from localStorage
 
 ## Technology Stack
 
-- **React 18** with Vite
-- **Material-UI (MUI) v5** for UI components
-- **SubtleCrypto API** for cryptographic operations
-- **localStorage** for credential persistence
-- **Native WebAuthn API** for hardware authenticator support
+- **React 19** with Vite 7 and **TypeScript** (strict mode)
+- **Tailwind v4** (CSS-first, tokens defined in `src/index.css` via `@theme`)
+- **`@base-ui-components/react`** — headless UI primitives
+- **`class-variance-authority`** + `clsx` + `tailwind-merge` — variant and class utilities
+- **`lucide-react`** — icons
+- **`cbor-x`** — CBOR encoding/decoding for attestation objects
+- **`shiki`** — syntax highlighting in the code viewer
+- **SubtleCrypto API** — all cryptographic operations (no external crypto libraries)
+- **localStorage** — credential and key persistence
+- **WebAuthn API** — hardware authenticator support
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
-- npm or yarn
+- Node.js v18 or higher
+- npm
 
 ### Installation
 
@@ -40,122 +44,171 @@ npm install
 npm run dev
 ```
 
-The application will be available at `http://localhost:5174/` (or another port if 5174 is in use).
+The application starts at `http://localhost:5173`.
 
 ### Build
 
 ```bash
-npm run build
+npm run build   # tsc -b && vite build
+npm run preview # preview the production build
+npm run lint    # run ESLint
 ```
 
 ## How to Use
 
-### 1. Enter a Challenge
+### 1. Select a Mode
 
-Paste your FIDO2 challenge in the "Challenge Input" field. The challenge can be:
-- Base64url encoded string
-- Plain text string
+Use the dropdown in the header to choose:
 
-### 2. Select Mode
+- **Simulated** — no hardware needed; keys are generated and stored in localStorage via SubtleCrypto
+- **Hardware (WebAuthn)** — delegates to `navigator.credentials` and your system authenticator
 
-Choose between:
-- **Simulated**: No hardware required, uses generated cryptographic keys
-- **Hardware API**: Uses real authenticators connected to your system
+### 2. Create a Credential
 
-### 3. Generate Keys (Simulated Mode Only)
+Go to **Create Credential** and fill in:
 
-In simulated mode, you can pre-generate key pairs:
-1. Select algorithm (ES256 or RS256)
-2. Click "Generate Key Pair"
-3. View generated keys by clicking "Show Generated Keys"
+| Field | Description |
+|---|---|
+| User ID | Unique identifier for the user |
+| User Name | Human-readable username |
+| User Display Name | Display name shown to the user |
+| RP ID | Relying Party domain (e.g. `localhost`) |
+| RP Name | Human-readable RP name |
+| Algorithm | ES256 or RS256 (simulated only) |
+| Challenge | Base64url or plain-text challenge from your server |
 
-### 4. Create Credential
+Optionally select a pre-generated key pair from the **Credentials → Key Generator** tab.
 
-Fill in the credential details:
-- User ID
-- User Name
-- User Display Name
-- RP ID (Relying Party ID)
-- RP Name
-- Algorithm (simulated mode only)
+Click **Create Credential**. The credential is stored in localStorage and its registration response is displayed.
 
-Optionally use a pre-generated key pair (if available).
+### 3. Sign a Challenge
 
-Click "Create Credential" to generate and store the credential.
+Go to **Sign / Assert**, paste the authentication challenge from your server, select a stored credential, and click **Sign**. The assertion response is displayed with per-field copy buttons.
 
-### 5. Sign Challenge
+### 4. Utilities
 
-1. Select a stored credential from the dropdown
-2. Click "Sign Challenge (Create Assertion)"
-3. The assertion will be generated and displayed in a collapsible section
-
-### 6. View Assertion
-
-The generated assertion includes:
-- Credential ID
-- Raw ID (base64url)
-- Authenticator Data
-- Signature
-- Client Data JSON (both encoded and decoded)
-- User Handle
-
-Each field has a copy button for easy clipboard access.
+| Tab | Purpose |
+|---|---|
+| Base64 Tool | Encode or decode base64url strings |
+| Attestation Decoder | Paste a base64url attestation object to inspect its CBOR structure |
+| Credentials | View stored credentials and pre-generated keys; delete individual entries |
 
 ## Supported Algorithms
 
-- **ES256** (ECDSA P-256): Elliptic curve digital signature algorithm
-- **RS256** (RSA 2048): RSA signature with SHA-256
+| Algorithm | Details |
+|---|---|
+| **ES256** | ECDSA with P-256 curve and SHA-256 |
+| **RS256** | RSASSA-PKCS1-v1_5 with SHA-256, 2048-bit modulus |
 
 ## Architecture
 
-### Components
+### Components (`src/components/`)
 
-- `App.jsx` - Main application container
-- `ChallengeInput.jsx` - Challenge text input
-- `ModeSelector.jsx` - Hardware/Simulated mode toggle
-- `KeyGeneratorButton.jsx` - Key pair generator with display
-- `CredentialManager.jsx` - List and manage stored credentials
-- `CreateCredentialForm.jsx` - Form to create new credentials
-- `SigningPanel.jsx` - Select credential and create assertions
-- `AssertionDisplay.jsx` - Collapsible assertion display
+| File | Role |
+|---|---|
+| `App.tsx` | Root layout, tab navigation, mode dropdown, global state |
+| `CreateCredentialForm.tsx` | Registration form for simulated and hardware credentials |
+| `SigningPanel.tsx` | Credential selector and assertion trigger |
+| `AssertionDisplay.tsx` | Structured display of the assertion response |
+| `KeyGeneratorButton.tsx` | Standalone key-pair generator |
+| `CredentialManager.tsx` | List and delete stored credentials |
+| `Base64Decoder.tsx` | Encode/decode base64url |
+| `AttestationObjectDecoder.tsx` | CBOR attestation object inspector |
 
-### Utilities
+### UI Primitives (`src/components/ui/`)
 
-- `crypto.js` - Cryptographic operations (key generation, signing, encoding)
-- `localStorage.js` - Storage management for credentials and keys
-- `fido2Hardware.js` - WebAuthn API wrapper for hardware authenticators
-- `fido2Simulator.js` - Simulated FIDO2 credential creation and signing
+Shadcn-style primitives — do not replace with external component libraries.
 
-## Data Storage
+| File | Description |
+|---|---|
+| `button.tsx` | `cva` Button — variants: `default \| outline \| secondary \| ghost \| destructive \| link`; sizes: `xs \| sm \| default \| lg \| icon \| icon-xs \| icon-sm \| icon-lg` |
+| `badge.tsx` | Pill badge — variants: `default \| secondary \| destructive \| warning \| outline \| ghost \| link` |
+| `textarea.tsx` | Auto-grow textarea (max 320 px), monospace |
+| `copy-button.tsx` | Copy → check feedback for 1500 ms |
+| `json-tree.tsx` | Recursive JSON tree with One-Dark colors, expand/collapse, per-node copy |
+| `code-block.tsx` | Shiki-powered syntax-highlighted code block |
+| `code-editor.tsx` | Editable code area with syntax highlighting |
 
-All data is stored in browser localStorage:
+### Utilities (`src/utils/`)
 
-- **Credentials**: FIDO2 credentials with public/private keys (simulated) or metadata (hardware)
-- **Generated Keys**: Pre-generated key pairs for simulated mode
+| File | Description |
+|---|---|
+| `crypto.ts` | `base64url`, `generateRS256KeyPair`, `generateES256KeyPair`, `signData`, `importKey`, `exportKey`, `jwkToCOSE` |
+| `localStorage.ts` | `StoredCredential` and `GeneratedKey` CRUD; keys `fido2_credentials` and `fido2_generated_keys` |
+| `fido2Simulator.ts` | `createSimulatedCredential`, `createSimulatedAssertion` — manually constructs WebAuthn structures |
+| `fido2Hardware.ts` | `createCredential`, `getAssertion`, `isWebAuthnSupported` — thin WebAuthn API wrappers |
+| `attestationParser.ts` | `parseAttestationObject` — decodes base64url CBOR attestation objects |
 
-To clear all data, use the "Clear All" button in the Credential Manager section.
+### Data Flow
+
+```
+Challenge + Mode
+       │
+       ▼
+CreateCredentialForm ──► fido2Simulator / fido2Hardware
+                                  │
+                         localStorage (fido2_credentials)
+                                  │
+                                  ▼
+SigningPanel ──► createSimulatedAssertion / getAssertion ──► AssertionDisplay
+```
+
+## localStorage Schema
+
+```typescript
+// key: "fido2_credentials"
+interface StoredCredential {
+  id: string
+  type: 'simulated' | 'hardware'
+  algorithm: string           // 'RS256' | 'ES256'
+  credentialId: string
+  publicKeyJWK?: JsonWebKey
+  privateKeyJWK?: JsonWebKey  // simulated only
+  response?: Record<string, unknown>
+  rpId: string
+  rpName?: string
+  userId: string
+  userName?: string
+  userDisplayName?: string
+  createdAt: string           // ISO 8601
+}
+
+// key: "fido2_generated_keys"
+interface GeneratedKey {
+  id: string
+  algorithm: string           // 'RS256' | 'ES256'
+  publicKey: JsonWebKey
+  privateKey: JsonWebKey
+  createdAt: string           // ISO 8601
+  used: boolean
+}
+```
 
 ## Testing Your FIDO2 Server
 
+**Registration flow**
+
 1. Get a registration challenge from your server
-2. Paste it into the Challenge Input
-3. Create a credential (simulated or hardware)
-4. Send the credential response to your server
-5. Get an authentication challenge from your server
-6. Paste it into the Challenge Input
-7. Sign the challenge with your stored credential
-8. Send the assertion response to your server
+2. Paste it into Create Credential → Challenge field
+3. Fill in user and RP details, click **Create Credential**
+4. Copy the credential response and send it to your server's registration endpoint
 
-## Browser Compatibility
+**Authentication flow**
 
-- **Hardware Mode**: Requires a browser with WebAuthn support (Chrome, Firefox, Safari, Edge)
-- **Simulated Mode**: Works in any modern browser with SubtleCrypto API support
+1. Get an authentication challenge from your server
+2. Go to **Sign / Assert**, paste the challenge
+3. Select the stored credential, click **Sign**
+4. Copy the assertion response and send it to your server's authentication endpoint
+
+## Browser Requirements
+
+- **Hardware Mode**: WebAuthn support (Chrome, Firefox, Safari, Edge)
+- **Simulated Mode**: SubtleCrypto API — any modern browser
+- localStorage must be available
 
 ## Security Notes
 
-This is a **testing tool** designed for development and testing of FIDO2 servers. The simulated mode stores private keys in localStorage, which is not secure for production use.
-
-For production applications, always use real hardware authenticators.
+This is a **development and testing tool**. Simulated mode stores private keys in localStorage, which is not appropriate for production use. Always use real hardware authenticators in production.
 
 ## License
 
