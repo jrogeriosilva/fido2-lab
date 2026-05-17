@@ -4,6 +4,7 @@ import { base64url } from '../utils/crypto'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
 import { CopyButton } from './ui/copy-button'
+import { CodeBlock } from './ui/code-block'
 
 export default function Base64Decoder() {
   const [input, setInput] = useState('')
@@ -89,9 +90,9 @@ export default function Base64Decoder() {
           <label className="text-sm font-medium">Output</label>
           {output && <CopyButton value={output} />}
         </div>
-        <Textarea
+        <CodeBlock
           value={output}
-          readOnly
+          language="auto"
           placeholder="Result will appear here."
           autoGrow
         />

@@ -3,8 +3,8 @@ import { getAssertion } from '../utils/fido2Hardware'
 import { createSimulatedAssertion } from '../utils/fido2Simulator'
 import { getCredentials, type StoredCredential } from '../utils/localStorage'
 import { Button } from './ui/button'
-import { Textarea } from './ui/textarea'
 import { Badge } from './ui/badge'
+import { CodeEditor } from './ui/code-editor'
 
 const DEFAULT_JSON = {
   challenge: 'VN00RzBXws786lXX2NrBhxpV3002sfeLhvSHyY_m4RBp7yhX34hPHnCVy_55saIxkqGRlJGvpCNChduIrZSn7DiSnqq___E4EuJvw3QUFC9SrGKgvSVsQ6CptqTddl8jfQCBJoYRftQibRcBNWfDmQswtKb3Ee6y_fprIyD02nw',
@@ -114,12 +114,13 @@ export default function SigningPanel({ mode, refreshKey, onAssertionGenerated }:
         <code className="font-mono text-xs bg-[var(--muted)] px-1 rounded">challenge</code> field is required.
       </p>
 
-      <Textarea
-        autoGrow
+      <CodeEditor
+        language="json"
         value={jsonInput}
         onChange={e => setJsonInput(e.target.value)}
         placeholder="Paste PublicKeyCredentialRequestOptions JSON…"
-        className="min-h-[180px]"
+        minHeight={180}
+        maxHeight={400}
       />
 
       {!autoSelected && (

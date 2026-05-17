@@ -3,8 +3,8 @@ import { createCredential } from '../utils/fido2Hardware'
 import { createSimulatedCredential } from '../utils/fido2Simulator'
 import { saveCredential, getGeneratedKeys } from '../utils/localStorage'
 import { Button } from './ui/button'
-import { Textarea } from './ui/textarea'
 import { Badge } from './ui/badge'
+import { CodeEditor } from './ui/code-editor'
 import JsonDisplay from './JsonDisplay'
 
 const DEFAULT_JSON = {
@@ -161,12 +161,13 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
         <code className="font-mono text-xs bg-[var(--muted)] px-1 rounded">challenge</code> field is required.
       </p>
 
-      <Textarea
-        autoGrow
+      <CodeEditor
+        language="json"
         value={jsonInput}
         onChange={e => setJsonInput(e.target.value)}
         placeholder="Paste PublicKeyCredentialCreationOptions JSON…"
-        className="min-h-[320px]"
+        minHeight={320}
+        maxHeight={600}
       />
 
       {mode === 'simulated' && (
