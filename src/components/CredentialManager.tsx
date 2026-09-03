@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Trash2, ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronRight, Cpu, Database, Trash2, Usb } from 'lucide-react'
 import { getCredentials, deleteCredential, clearAllCredentials, type StoredCredential } from '../utils/localStorage'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { CopyButton } from './ui/copy-button'
-import { JsonTree } from './ui/json-tree'
+import { EmptyState } from './ui/empty-state'
+import JsonDisplay from './JsonDisplay'
+import { cn } from '@/lib/utils'
 
 interface Props {
   refreshKey: number
@@ -12,59 +14,99 @@ interface Props {
 
 function CredentialRow({ credential, onDelete }: { credential: StoredCredential; onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false)
+  const isSimulated = credential.type === 'simulated'
+  const Icon = isSimulated ? Cpu : Usb
+  const hasPublicKey = Boolean(credential.publicKeyJWK)
+
+  const meta: [string, string | undefined][] = [
+    ['RP ID', credential.rpId],
+    ['User', credential.userName || credential.userId],
+    ['User ID', credential.userId],
+    ['Created', credential.createdAt ? new Date(credential.createdAt).toLocaleString() : undefined],
+  ]
 
   return (
-    <div className="rounded-md border" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}>
-      {/* Header row */}
-      <div className="flex items-center justify-between px-3 py-2.5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className="flex items-center gap-1 text-sm font-medium hover:text-[var(--foreground)] transition-colors"
-            style={{ color: 'var(--foreground)' }}
-          >
-            {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            <span className="font-mono text-xs">{credential.id.substring(0, 20)}…</span>
-          </button>
-          <Badge variant="secondary" className="font-mono">{credential.algorithm}</Badge>
-          <Badge variant={credential.type === 'simulated' ? 'outline' : 'default'}>{credential.type}</Badge>
+    <article
+      className="rounded-xl border border-[var(--border)] bg-[var(--background)]/60 transition-colors hover:border-[oklch(1_0_0/16%)]"
+    >
+      <div className="flex items-start gap-3 px-4 py-3">
+        <span
+          className={cn(
+            'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+            isSimulated
+              ? 'bg-[var(--brand)]/12 text-[var(--brand)]'
+              : 'bg-[var(--warning)]/12 text-[var(--warning)]',
+          )}
+        >
+          <Icon size={16} />
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span
+              className="max-w-full truncate font-mono text-[13px] font-medium"
+              title={credential.id}
+            >
+              {credential.id}
+            </span>
+            <Badge variant="secondary" className="font-mono">{credential.algorithm}</Badge>
+            <Badge variant={isSimulated ? 'brand' : 'warning'}>{credential.type}</Badge>
+          </div>
+
+          <dl className="mt-2.5 grid grid-cols-1 gap-x-6 gap-y-2 text-xs sm:grid-cols-2 lg:grid-cols-4">
+            {meta.filter(([, v]) => v).map(([k, v]) => (
+              <div key={k} className="min-w-0">
+                <dt className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+                  {k}
+                </dt>
+                <dd className="truncate font-mono text-[var(--foreground)]/85" title={v}>
+                  {v}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
-        <div className="flex items-center gap-1">
-          <CopyButton value={JSON.stringify(credential, null, 2)} size="icon-sm" />
+
+        <div className="flex shrink-0 items-center gap-0.5">
+          <CopyButton
+            value={JSON.stringify(credential, null, 2)}
+            size="icon-sm"
+            variant="ghost"
+            title="Copy credential JSON"
+          />
           <Button
             variant="ghost"
             size="icon-sm"
             onClick={onDelete}
             title="Delete credential"
+            className="text-[var(--muted-foreground)] hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
           >
-            <Trash2 size={13} style={{ color: 'var(--destructive)' }} />
+            <Trash2 size={14} />
           </Button>
         </div>
       </div>
 
-      {/* Definition list */}
-      <dl className="px-4 pb-2 space-y-1">
-        {[
-          ['rpId', credential.rpId],
-          ['userId', credential.userId],
-          ['userName', credential.userName],
-          ['createdAt', credential.createdAt ? new Date(credential.createdAt).toLocaleString() : undefined],
-        ].filter(([, v]) => v).map(([k, v]) => (
-          <div key={k as string} className="flex gap-3 text-xs">
-            <dt className="font-mono font-medium w-24 shrink-0" style={{ color: 'var(--foreground)' }}>{k as string}</dt>
-            <dd style={{ color: 'var(--muted-foreground)' }}>{v as string}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {/* Expanded public key */}
-      {expanded && credential.publicKeyJWK && (
-        <div className="border-t mx-3 mb-3" style={{ borderColor: 'var(--border)' }}>
-          <p className="text-xs mt-2 mb-1 font-medium" style={{ color: 'var(--muted-foreground)' }}>Public Key (JWK)</p>
-          <JsonTree data={credential.publicKeyJWK} />
+      {hasPublicKey && (
+        <div className="border-t border-[var(--border)]">
+          <button
+            onClick={() => setExpanded(e => !e)}
+            aria-expanded={expanded}
+            className="flex w-full items-center gap-1.5 px-4 py-2 text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+          >
+            <ChevronRight
+              size={13}
+              className={cn('transition-transform duration-200', expanded && 'rotate-90')}
+            />
+            Public key (JWK)
+          </button>
+          {expanded && (
+            <div className="px-4 pb-3 animate-in fade-in-0 duration-200">
+              <JsonDisplay data={credential.publicKeyJWK} maxHeight={320} />
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </article>
   )
 }
 
@@ -89,24 +131,23 @@ export default function CredentialManager({ refreshKey }: Props) {
 
   if (credentials.length === 0) {
     return (
-      <div
-        className="rounded-md border p-4 min-h-[200px] flex items-center justify-center"
-        style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
-      >
-        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-          No credentials stored. Create one first.
-        </p>
-      </div>
+      <EmptyState
+        icon={<Database size={18} />}
+        title="No credentials stored"
+        description="Register one in the Create Credential tab. It will appear here with its metadata and public key."
+      />
     )
   }
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-          {credentials.length} credential{credentials.length !== 1 ? 's' : ''} stored
+        <span className="text-xs text-[var(--muted-foreground)]">
+          <span className="font-semibold text-[var(--foreground)]">{credentials.length}</span>
+          {' '}credential{credentials.length !== 1 ? 's' : ''} stored
         </span>
         <Button variant="destructive" size="sm" onClick={handleClearAll}>
+          <Trash2 size={13} />
           Clear all
         </Button>
       </div>

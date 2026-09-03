@@ -1,10 +1,16 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import { Braces, Check, FileKey2, Fingerprint, Minus, ScanSearch, type LucideIcon } from 'lucide-react'
 import { parseAttestationObject } from '../utils/attestationParser'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
-import { Badge } from './ui/badge'
+import { Label } from './ui/label'
+import { Alert } from './ui/alert'
+import { Field } from './ui/field'
 import { CopyButton } from './ui/copy-button'
-import { JsonTree } from './ui/json-tree'
+import { EmptyState } from './ui/empty-state'
+import { InlineCode } from './ui/inline-code'
+import JsonDisplay from './JsonDisplay'
+import { cn } from '@/lib/utils'
 
 interface ParsedAttestation {
   fmt: string
@@ -36,6 +42,88 @@ const FLAG_LABELS: Record<string, string> = {
   ED: 'Extension Data',
 }
 
+function Section({
+  icon: Icon,
+  title,
+  action,
+  children,
+}: {
+  icon: LucideIcon
+  title: string
+  action?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--background)]/40">
+      <header className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <Icon size={14} className="text-[var(--brand)]" />
+          <h3 className="text-sm font-semibold">{title}</h3>
+        </div>
+        {action}
+      </header>
+      <div className="flex flex-col gap-4 p-4">{children}</div>
+    </section>
+  )
+}
+
+function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--background)]/60 px-4 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">{label}</p>
+      <p className="mt-1 text-lg font-semibold leading-tight">{value}</p>
+      {hint && <p className="mt-0.5 text-[11px] text-[var(--muted-foreground)]">{hint}</p>}
+    </div>
+  )
+}
+
+function HexValue({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <Label>{label}</Label>
+        <CopyButton value={value} size="xs" variant="ghost" />
+      </div>
+      <code className="block break-all rounded-md border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 font-mono text-xs leading-relaxed">
+        {value}
+      </code>
+    </div>
+  )
+}
+
+function FlagGrid({ flags }: { flags: Record<string, boolean> }) {
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {Object.entries(flags).map(([flag, active]) => (
+        <div
+          key={flag}
+          className={cn(
+            'flex items-center gap-2.5 rounded-lg border px-2.5 py-2 transition-colors',
+            active
+              ? 'border-[var(--success)]/30 bg-[var(--success)]/8'
+              : 'border-[var(--border)] bg-[var(--background)]/60 opacity-70',
+          )}
+        >
+          <span
+            className={cn(
+              'flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
+              active
+                ? 'bg-[var(--success)]/20 text-[var(--success)]'
+                : 'bg-[var(--secondary)] text-[var(--muted-foreground)]',
+            )}
+          >
+            {active ? <Check size={11} /> : <Minus size={11} />}
+          </span>
+          <div className="min-w-0 leading-tight">
+            <p className="font-mono text-xs font-semibold">{flag}</p>
+            <p className="truncate text-[11px] text-[var(--muted-foreground)]">{FLAG_LABELS[flag] ?? flag}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function AttestationObjectDecoder() {
   const [input, setInput] = useState('')
   const [parsed, setParsed] = useState<ParsedAttestation | null>(null)
@@ -52,142 +140,100 @@ export default function AttestationObjectDecoder() {
     }
   }
 
+  const activeFlags = parsed ? Object.values(parsed.authData.flags).filter(Boolean).length : 0
+  const attested = parsed?.authData.attestedCredentialData
+
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-        Paste a base64url-encoded <code className="font-mono text-xs bg-[var(--muted)] px-1 rounded">attestationObject</code> to decode its CBOR structure.
-      </p>
+    <div className="flex flex-col gap-5">
+      <Field
+        label="Attestation object (base64url)"
+        hint={
+          <>
+            Paste the base64url-encoded <InlineCode>attestationObject</InlineCode> from an{' '}
+            <InlineCode>AuthenticatorAttestationResponse</InlineCode>.
+          </>
+        }
+      >
+        <Textarea
+          value={input}
+          onChange={e => { setInput(e.target.value); setError('') }}
+          placeholder="Paste base64url-encoded attestationObject here…"
+          autoGrow
+        />
+      </Field>
 
-      <Textarea
-        value={input}
-        onChange={e => { setInput(e.target.value); setError('') }}
-        placeholder="Paste base64url-encoded attestationObject here…"
-        autoGrow
-      />
-
-      {error && (
-        <div
-          role="alert"
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{ borderColor: 'color-mix(in oklch, var(--destructive) 50%, transparent)', color: 'var(--destructive)' }}
-        >
-          {error}
-        </div>
-      )}
+      {error && <Alert variant="destructive">{error}</Alert>}
 
       <Button onClick={handleDecode} className="self-start">
-        Decode AttestationObject
+        <ScanSearch size={15} />
+        Decode attestationObject
       </Button>
 
-      {parsed && (
-        <div className="flex flex-col gap-4 mt-2">
-          {/* Attestation format */}
-          <div className="rounded-md border p-4" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}>
-            <h3 className="text-sm font-semibold mb-2">Attestation Format</h3>
-            <Badge variant="secondary" className="font-mono">{parsed.fmt}</Badge>
+      {parsed ? (
+        <div className="flex flex-col gap-4 border-t border-[var(--border)] pt-5 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+          {/* Summary */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Stat label="Attestation format" value={<span className="font-mono">{parsed.fmt}</span>} />
+            <Stat label="Sign count" value={parsed.authData.signCount} />
+            <Stat
+              label="Flags"
+              value={<span className="font-mono">{parsed.authData.flagsByte}</span>}
+              hint={`${activeFlags} of ${Object.keys(parsed.authData.flags).length} set`}
+            />
           </div>
 
           {/* Authenticator data */}
-          <div className="rounded-md border p-4 flex flex-col gap-3" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}>
-            <h3 className="text-sm font-semibold">Authenticator Data</h3>
+          <Section icon={Fingerprint} title="Authenticator Data">
+            <HexValue label="RP ID hash (SHA-256)" value={parsed.authData.rpIdHash} />
 
-            <dl className="space-y-2">
-              <div>
-                <dt className="text-xs font-medium mb-0.5" style={{ color: 'var(--muted-foreground)' }}>RP ID Hash</dt>
-                <dd className="font-mono text-xs break-all" style={{ color: 'var(--foreground)' }}>{parsed.authData.rpIdHash}</dd>
-              </div>
+            <div className="flex flex-col gap-2">
+              <Label>Flags</Label>
+              <FlagGrid flags={parsed.authData.flags} />
+            </div>
 
-              <div>
-                <dt className="text-xs font-medium mb-1" style={{ color: 'var(--muted-foreground)' }}>
-                  Flags <span className="font-mono">({parsed.authData.flagsByte})</span>
-                </dt>
-                <dd className="flex flex-wrap gap-1.5">
-                  {Object.entries(parsed.authData.flags).map(([flag, active]) => (
-                    <Badge
-                      key={flag}
-                      variant={active ? 'secondary' : 'outline'}
-                      className="font-mono"
-                      title={FLAG_LABELS[flag]}
-                    >
-                      {flag}
-                    </Badge>
-                  ))}
-                </dd>
-                <dd className="mt-1 text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                  {Object.entries(FLAG_LABELS).map(([k, v]) => `${k}=${v}`).join(' · ')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-xs font-medium mb-0.5" style={{ color: 'var(--muted-foreground)' }}>Sign Count</dt>
-                <dd><Badge variant="outline" className="font-mono">{parsed.authData.signCount}</Badge></dd>
-              </div>
-            </dl>
-
-            {parsed.authData.attestedCredentialData && (
-              <div>
-                <h4 className="text-xs font-semibold mb-2" style={{ color: 'var(--muted-foreground)' }}>Attested Credential Data</h4>
-                <dl className="space-y-2">
-                  {[
-                    ['AAGUID', parsed.authData.attestedCredentialData.aaguid],
-                    ['Credential ID (hex)', parsed.authData.attestedCredentialData.credentialId],
-                    ['Credential ID (base64url)', parsed.authData.attestedCredentialData.credentialIdBase64url],
-                  ].map(([k, v]) => (
-                    <div key={k as string}>
-                      <dt className="text-xs font-medium mb-0.5" style={{ color: 'var(--muted-foreground)' }}>{k as string}</dt>
-                      <dd className="font-mono text-xs break-all">{v as string}</dd>
-                    </div>
-                  ))}
-                  <div>
-                    <dt className="text-xs font-medium mb-1" style={{ color: 'var(--muted-foreground)' }}>Credential Public Key (COSE)</dt>
-                    <dd>
-                      <div className="rounded-md border overflow-auto" style={{ borderColor: 'var(--border)' }}>
-                        <JsonTree data={parsed.authData.attestedCredentialData.credentialPublicKey} />
-                      </div>
-                    </dd>
-                  </div>
-                </dl>
+            {attested && (
+              <div className="flex flex-col gap-4 border-t border-[var(--border)] pt-4">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+                  Attested credential data
+                </h4>
+                <HexValue label="AAGUID" value={attested.aaguid} />
+                <HexValue label="Credential ID (hex)" value={attested.credentialId} />
+                <HexValue label="Credential ID (base64url)" value={attested.credentialIdBase64url} />
+                <div className="flex flex-col gap-1.5">
+                  <Label>Credential public key (COSE)</Label>
+                  <JsonDisplay data={attested.credentialPublicKey} maxHeight={320} />
+                </div>
               </div>
             )}
 
             {Boolean(parsed.authData.extensions) && (
-              <div>
-                <h4 className="text-xs font-semibold mb-1" style={{ color: 'var(--muted-foreground)' }}>Extensions</h4>
-                <div className="rounded-md border overflow-auto" style={{ borderColor: 'var(--border)' }}>
-                  <JsonTree data={parsed.authData.extensions} />
-                </div>
+              <div className="flex flex-col gap-1.5 border-t border-[var(--border)] pt-4">
+                <Label>Extensions</Label>
+                <JsonDisplay data={parsed.authData.extensions} maxHeight={320} />
               </div>
             )}
-          </div>
+          </Section>
 
           {/* Attestation statement */}
-          <div className="rounded-md border p-4" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}>
-            <h3 className="text-sm font-semibold mb-2">Attestation Statement</h3>
-            <div className="rounded-md border overflow-auto" style={{ borderColor: 'var(--border)' }}>
-              <JsonTree data={parsed.attStmt} />
-            </div>
-          </div>
+          <Section icon={FileKey2} title="Attestation Statement">
+            <JsonDisplay data={parsed.attStmt} maxHeight={400} />
+          </Section>
 
           {/* Full JSON */}
-          <div className="rounded-md border p-4" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">Complete JSON Structure</h3>
-              <CopyButton value={JSON.stringify(parsed, null, 2)} label="Copy all" />
-            </div>
-            <div className="rounded-md border overflow-auto max-h-[400px]" style={{ borderColor: 'var(--border)' }}>
-              <JsonTree data={parsed} />
-            </div>
-          </div>
+          <Section
+            icon={Braces}
+            title="Complete Structure"
+            action={<CopyButton value={JSON.stringify(parsed, null, 2)} label="Copy all" size="xs" />}
+          >
+            <JsonDisplay data={parsed} maxHeight={400} copyable={false} />
+          </Section>
         </div>
-      )}
-
-      {!parsed && (
-        <div
-          className="rounded-md border min-h-[200px] flex items-center justify-center"
-          style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
-        >
-          <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>Decoded output will appear here.</p>
-        </div>
+      ) : (
+        <EmptyState
+          icon={<ScanSearch size={18} />}
+          title="Nothing decoded yet"
+          description="Paste an attestationObject above and press Decode to inspect its format, flags, credential ID and public key."
+        />
       )}
     </div>
   )

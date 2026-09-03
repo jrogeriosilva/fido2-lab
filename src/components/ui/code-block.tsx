@@ -60,7 +60,7 @@ export function CodeBlock({
   return (
     <div
       className={cn(
-        'w-full rounded-lg border border-[var(--input)] bg-[var(--card)] text-sm font-mono overflow-auto',
+        'w-full rounded-lg border border-[var(--input)] bg-[var(--background)] text-sm font-mono overflow-auto',
         className,
       )}
       style={{

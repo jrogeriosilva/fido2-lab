@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { ArrowDownUp } from 'lucide-react'
+import { ArrowDownUp, ArrowLeftRight, ArrowRightLeft } from 'lucide-react'
 import { base64url } from '../utils/crypto'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
 import { CopyButton } from './ui/copy-button'
 import { CodeBlock } from './ui/code-block'
+import { Alert } from './ui/alert'
+import { Field } from './ui/field'
+import { InlineCode } from './ui/inline-code'
 
 export default function Base64Decoder() {
   const [input, setInput] = useState('')
@@ -39,69 +42,70 @@ export default function Base64Decoder() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Input */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between min-h-[28px]">
-          <label className="text-sm font-medium">Input</label>
-          {input && <CopyButton value={input} />}
+    <div className="flex flex-col gap-5">
+      {/* Input / Output panes */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-stretch">
+        <Field
+          label="Input"
+          action={input ? <CopyButton value={input} size="xs" variant="ghost" /> : undefined}
+        >
+          <Textarea
+            value={input}
+            onChange={e => { setInput(e.target.value); setError('') }}
+            placeholder="Enter text to encode, or paste a base64url string to decode…"
+            className="min-h-[200px] flex-1"
+            autoGrow
+          />
+        </Field>
+
+        <div className="flex items-center justify-center lg:pt-9">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleSwap}
+            disabled={!input && !output}
+            title="Swap input and output"
+            className="rounded-full"
+          >
+            <ArrowDownUp size={14} className="lg:hidden" />
+            <ArrowLeftRight size={14} className="hidden lg:block" />
+          </Button>
         </div>
-        <Textarea
-          value={input}
-          onChange={e => { setInput(e.target.value); setError('') }}
-          placeholder="Enter text to encode, or paste a base64url string to decode…"
-          autoGrow
-        />
+
+        <Field
+          label="Output"
+          action={output ? <CopyButton value={output} size="xs" variant="ghost" /> : undefined}
+        >
+          <CodeBlock
+            value={output}
+            language="auto"
+            placeholder="Result will appear here."
+            className="min-h-[200px] flex-1"
+            autoGrow
+            maxHeight={320}
+          />
+        </Field>
       </div>
+
+      {error && <Alert variant="destructive">{error}</Alert>}
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
-        <Button variant="default" onClick={handleDecode} className="flex-1">
-          Decode (Base64URL → Text)
+      <div className="flex flex-wrap items-center gap-2">
+        <Button onClick={handleDecode}>
+          <ArrowRightLeft size={14} />
+          Decode base64url → text
         </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleSwap}
-          disabled={!input && !output}
-          title="Swap input and output"
-        >
-          <ArrowDownUp size={14} />
+        <Button variant="secondary" onClick={handleEncode}>
+          Encode text → base64url
         </Button>
-        <Button variant="default" onClick={handleEncode} className="flex-1">
-          Encode (Text → Base64URL)
-        </Button>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div
-          role="alert"
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{ borderColor: 'color-mix(in oklch, var(--destructive) 50%, transparent)', color: 'var(--destructive)' }}
-        >
-          {error}
-        </div>
-      )}
-
-      {/* Output */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between min-h-[28px]">
-          <label className="text-sm font-medium">Output</label>
-          {output && <CopyButton value={output} />}
-        </div>
-        <CodeBlock
-          value={output}
-          language="auto"
-          placeholder="Result will appear here."
-          autoGrow
-        />
       </div>
 
       {/* Info */}
-      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-        Uses base64url encoding (RFC 4648): <code className="font-mono bg-[var(--muted)] px-1 rounded">+</code> → <code className="font-mono bg-[var(--muted)] px-1 rounded">-</code>,{' '}
-        <code className="font-mono bg-[var(--muted)] px-1 rounded">/</code> → <code className="font-mono bg-[var(--muted)] px-1 rounded">_</code>, no padding. This is the format used by FIDO2/WebAuthn.
+      <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+        Uses the base64url alphabet from RFC 4648 §5:{' '}
+        <InlineCode>+</InlineCode> → <InlineCode>-</InlineCode>,{' '}
+        <InlineCode>/</InlineCode> → <InlineCode>_</InlineCode>, no padding.
+        This is the encoding FIDO2 and WebAuthn use for binary fields.
       </p>
     </div>
   )

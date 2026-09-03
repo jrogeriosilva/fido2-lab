@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { KeyRound, Trash2, ChevronDown, ChevronRight } from 'lucide-react'
+import { Check, ChevronRight, KeyRound, LoaderCircle, Trash2 } from 'lucide-react'
 import { generateKeyPairForStorage } from '../utils/fido2Simulator'
 import { saveGeneratedKey, getGeneratedKeys, deleteGeneratedKey, type GeneratedKey } from '../utils/localStorage'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
+import { Select } from './ui/select'
 import { CopyButton } from './ui/copy-button'
+import { EmptyState } from './ui/empty-state'
+import { cn } from '@/lib/utils'
 
 interface Props {
   onKeyGenerated?: () => void
@@ -16,7 +19,7 @@ export default function KeyGeneratorButton({ onKeyGenerated }: Props) {
   const [flash, setFlash] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [keys, setKeys] = useState<GeneratedKey[]>(() => getGeneratedKeys())
-  const [showKeys, setShowKeys] = useState(false)
+  const [showKeys, setShowKeys] = useState(() => getGeneratedKeys().length > 0)
 
   const refresh = () => setKeys(getGeneratedKeys())
 
@@ -28,7 +31,8 @@ export default function KeyGeneratorButton({ onKeyGenerated }: Props) {
       const keyPair = await generateKeyPairForStorage(algorithm)
       saveGeneratedKey(keyPair)
       refresh()
-      setFlash(`Key generated · ${algorithm}`)
+      setShowKeys(true)
+      setFlash(`${algorithm} key pair generated`)
       setTimeout(() => setFlash(null), 1500)
       onKeyGenerated?.()
     } catch (err) {
@@ -44,90 +48,112 @@ export default function KeyGeneratorButton({ onKeyGenerated }: Props) {
     onKeyGenerated?.()
   }
 
+  const available = keys.filter(k => !k.used).length
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Algorithm picker */}
-        <div
-          className="rounded-lg border overflow-hidden"
-          style={{ borderColor: 'var(--input)', backgroundColor: 'var(--card)' }}
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--background)]/60 p-3 sm:flex-row sm:items-center">
+        <Select
+          value={algorithm}
+          onChange={e => setAlgorithm(e.target.value)}
+          wrapperClassName="sm:w-56"
+          className="font-mono"
+          aria-label="Key algorithm"
         >
-          <select
-            value={algorithm}
-            onChange={e => setAlgorithm(e.target.value)}
-            className="px-2.5 py-1.5 text-sm font-mono bg-transparent outline-none h-8"
-            style={{ color: 'var(--foreground)' }}
-          >
-            <option value="ES256" style={{ backgroundColor: 'var(--card)' }}>ES256 (ECDSA P-256)</option>
-            <option value="RS256" style={{ backgroundColor: 'var(--card)' }}>RS256 (RSA 2048)</option>
-          </select>
-        </div>
+          <option value="ES256">ES256 · ECDSA P-256</option>
+          <option value="RS256">RS256 · RSA 2048</option>
+        </Select>
 
-        <Button variant="secondary" onClick={handleGenerate} disabled={loading} className="gap-2">
-          <KeyRound size={14} />
+        <Button onClick={handleGenerate} disabled={loading} className="h-9">
+          {loading ? <LoaderCircle size={14} className="animate-spin" /> : <KeyRound size={14} />}
           {loading ? 'Generating…' : 'Generate Key Pair'}
         </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => { if (!showKeys) refresh(); setShowKeys(s => !s) }}
-          className="gap-1.5"
-        >
-          {showKeys ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-          {showKeys ? 'Hide' : 'Show'} Keys ({keys.length})
-        </Button>
+        <div className="flex items-center gap-2 sm:ml-auto">
+          {flash && (
+            <Badge variant="success" className="animate-in fade-in-0 zoom-in-95 duration-200">
+              <Check />
+              {flash}
+            </Badge>
+          )}
+          {error && (
+            <span className="text-xs text-[var(--destructive)]">{error}</span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { if (!showKeys) refresh(); setShowKeys(s => !s) }}
+            aria-expanded={showKeys}
+            className="text-[var(--muted-foreground)]"
+          >
+            <ChevronRight
+              size={13}
+              className={cn('transition-transform duration-200', showKeys && 'rotate-90')}
+            />
+            {keys.length} key{keys.length !== 1 ? 's' : ''}
+            {keys.length > 0 && (
+              <span className="text-[var(--muted-foreground)]/70">· {available} available</span>
+            )}
+          </Button>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 min-h-[28px]">
-        {flash && <Badge variant="secondary">{flash}</Badge>}
-        {error && (
-          <span className="text-xs" style={{ color: 'var(--destructive)' }}>{error}</span>
-        )}
-      </div>
-
+      {/* Key list */}
       {showKeys && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 animate-in fade-in-0 slide-in-from-top-1 duration-200">
           {keys.length === 0 ? (
-            <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>No key pairs generated yet.</p>
+            <EmptyState
+              icon={<KeyRound size={18} />}
+              title="No key pairs yet"
+              description="Generate a key pair above. Unused keys can be attached to a simulated credential."
+              className="py-8"
+            />
           ) : (
             keys.map(key => (
               <div
                 key={key.id}
-                className="rounded-md border p-3 flex items-start justify-between gap-3"
-                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
+                className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--background)]/60 px-3 py-2.5 transition-colors hover:border-[oklch(1_0_0/16%)]"
               >
-                <dl className="space-y-0.5 text-xs">
-                  <div className="flex gap-3">
-                    <dt className="font-mono font-medium w-16 shrink-0" style={{ color: 'var(--muted-foreground)' }}>id</dt>
-                    <dd className="font-mono break-all">{key.id}</dd>
+                <span
+                  className={cn(
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-md',
+                    key.used
+                      ? 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
+                      : 'bg-[var(--brand)]/12 text-[var(--brand)]',
+                  )}
+                >
+                  <KeyRound size={14} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="max-w-full truncate font-mono text-xs font-medium" title={key.id}>
+                      {key.id}
+                    </span>
+                    <Badge variant="secondary" className="font-mono">{key.algorithm}</Badge>
+                    <Badge variant={key.used ? 'outline' : 'success'}>
+                      {key.used ? 'Used' : 'Available'}
+                    </Badge>
                   </div>
-                  <div className="flex gap-3">
-                    <dt className="font-mono font-medium w-16 shrink-0" style={{ color: 'var(--muted-foreground)' }}>alg</dt>
-                    <dd><Badge variant="secondary" className="font-mono">{key.algorithm}</Badge></dd>
-                  </div>
-                  <div className="flex gap-3">
-                    <dt className="font-mono font-medium w-16 shrink-0" style={{ color: 'var(--muted-foreground)' }}>created</dt>
-                    <dd style={{ color: 'var(--muted-foreground)' }}>{new Date(key.createdAt).toLocaleString()}</dd>
-                  </div>
-                  <div className="flex gap-3">
-                    <dt className="font-mono font-medium w-16 shrink-0" style={{ color: 'var(--muted-foreground)' }}>status</dt>
-                    <dd>
-                      <Badge variant={key.used ? 'outline' : 'secondary'}>
-                        {key.used ? 'Used' : 'Available'}
-                      </Badge>
-                    </dd>
-                  </div>
-                </dl>
-                <div className="flex gap-1 shrink-0">
-                  <CopyButton value={JSON.stringify(key, null, 2)} size="icon-sm" />
+                  <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">
+                    Created {new Date(key.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-0.5">
+                  <CopyButton
+                    value={JSON.stringify(key, null, 2)}
+                    size="icon-sm"
+                    variant="ghost"
+                    title="Copy key JSON"
+                  />
                   <Button
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => handleDelete(key.id)}
                     title="Delete key"
+                    className="text-[var(--muted-foreground)] hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]"
                   >
-                    <Trash2 size={13} style={{ color: 'var(--destructive)' }} />
+                    <Trash2 size={14} />
                   </Button>
                 </div>
               </div>

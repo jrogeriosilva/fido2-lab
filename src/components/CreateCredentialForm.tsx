@@ -1,9 +1,15 @@
 import { useState } from 'react'
+import { CircleCheck, KeyRound, LoaderCircle } from 'lucide-react'
 import { createCredential } from '../utils/fido2Hardware'
 import { createSimulatedCredential } from '../utils/fido2Simulator'
 import { saveCredential, getGeneratedKeys } from '../utils/localStorage'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
+import { Alert } from './ui/alert'
+import { Field } from './ui/field'
+import { Select } from './ui/select'
+import { InlineCode } from './ui/inline-code'
+import { CopyButton } from './ui/copy-button'
 import { CodeEditor } from './ui/code-editor'
 import JsonDisplay from './JsonDisplay'
 
@@ -154,80 +160,91 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
     }
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-        Configure credential creation parameters in JSON format. The{' '}
-        <code className="font-mono text-xs bg-[var(--muted)] px-1 rounded">challenge</code> field is required.
-      </p>
+  const noKeys = generatedKeys.length === 0
 
-      <CodeEditor
-        language="json"
-        value={jsonInput}
-        onChange={e => setJsonInput(e.target.value)}
-        placeholder="Paste PublicKeyCredentialCreationOptions JSON…"
-        minHeight={320}
-        maxHeight={600}
-      />
+  return (
+    <div className="flex flex-col gap-5">
+      <Field
+        label="Creation options (JSON)"
+        hint={
+          <>
+            A <InlineCode>PublicKeyCredentialCreationOptions</InlineCode> object.
+            The <InlineCode>challenge</InlineCode> field is required;{' '}
+            <InlineCode>rp</InlineCode>, <InlineCode>user</InlineCode> and{' '}
+            <InlineCode>pubKeyCredParams</InlineCode> are honoured when present.
+          </>
+        }
+      >
+        <CodeEditor
+          language="json"
+          value={jsonInput}
+          onChange={e => setJsonInput(e.target.value)}
+          placeholder="Paste PublicKeyCredentialCreationOptions JSON…"
+          minHeight={320}
+          maxHeight={600}
+        />
+      </Field>
 
       {mode === 'simulated' && (
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
-            Pre-generated key <span style={{ color: 'var(--destructive)' }}>*</span>
-          </label>
-          <div
-            className="rounded-lg border overflow-hidden"
-            style={{ borderColor: 'var(--input)', backgroundColor: 'var(--card)' }}
+        <Field
+          label="Pre-generated key"
+          required
+          hint={
+            noKeys
+              ? 'No unused key pairs yet — generate one in the Credentials tab, then come back here.'
+              : 'The selected key pair becomes the credential key and is marked as used.'
+          }
+        >
+          <Select
+            value={selectedKeyId}
+            onChange={e => setSelectedKeyId(e.target.value)}
+            className="font-mono"
+            disabled={noKeys}
           >
-            <select
-              value={selectedKeyId}
-              onChange={e => setSelectedKeyId(e.target.value)}
-              className="w-full px-2.5 py-2 text-sm font-mono bg-transparent outline-none"
-              style={{ color: 'var(--foreground)' }}
-            >
-              <option value="" style={{ backgroundColor: 'var(--card)' }}>
-                {generatedKeys.length === 0 ? 'No keys available — generate one in Credentials tab' : 'Select a key…'}
+            <option value="">
+              {noKeys ? 'No keys available' : 'Select a key…'}
+            </option>
+            {generatedKeys.map(k => (
+              <option key={k.id} value={k.id}>
+                {k.algorithm} · {k.id} · {new Date(k.createdAt).toLocaleString()}
               </option>
-              {generatedKeys.map(k => (
-                <option key={k.id} value={k.id} style={{ backgroundColor: 'var(--card)' }}>
-                  {k.algorithm} · {k.id} · {new Date(k.createdAt).toLocaleString()}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+            ))}
+          </Select>
+        </Field>
       )}
 
-      <div className="flex flex-col gap-2 min-h-[28px]">
-        {error && (
-          <div
-            role="alert"
-            className="rounded-md border px-3 py-2 text-sm"
-            style={{ borderColor: 'color-mix(in oklch, var(--destructive) 50%, transparent)', color: 'var(--destructive)' }}
-          >
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">{success}</Badge>
-          </div>
+      {error && <Alert variant="destructive">{error}</Alert>}
+      {success && <Alert variant="success">{success}</Alert>}
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          onClick={handleCreate}
+          disabled={loading || (mode === 'simulated' && !selectedKeyId)}
+        >
+          {loading ? <LoaderCircle size={15} className="animate-spin" /> : <KeyRound size={15} />}
+          {loading ? 'Creating…' : `Create ${mode === 'hardware' ? 'Hardware' : 'Simulated'} Credential`}
+        </Button>
+        {mode === 'hardware' && (
+          <span className="text-xs text-[var(--muted-foreground)]">
+            Your browser will prompt for an authenticator.
+          </span>
         )}
       </div>
 
-      <Button
-        onClick={handleCreate}
-        disabled={loading || (mode === 'simulated' && !selectedKeyId)}
-        className="self-start"
-      >
-        {loading ? 'Creating…' : `Create ${mode === 'hardware' ? 'Hardware' : 'Simulated'} Credential`}
-      </Button>
-
       {result && (
-        <div className="flex flex-col gap-2 mt-2">
-          <h3 className="text-sm font-semibold">Created Credential</h3>
-          <JsonDisplay data={result} maxHeight={600} />
-        </div>
+        <section className="flex flex-col gap-3 border-t border-[var(--border)] pt-5 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--success)]/12 text-[var(--success)]">
+                <CircleCheck size={14} />
+              </span>
+              <h3 className="text-sm font-semibold">Created Credential</h3>
+              <Badge variant="success">attestation response</Badge>
+            </div>
+            <CopyButton value={JSON.stringify(result, null, 2)} label="Copy all" />
+          </div>
+          <JsonDisplay data={result} maxHeight={600} copyable={false} />
+        </section>
       )}
     </div>
   )
