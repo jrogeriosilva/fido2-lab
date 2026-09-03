@@ -7,6 +7,7 @@ import KeyGeneratorButton from './components/KeyGeneratorButton'
 import CredentialManager from './components/CredentialManager'
 import Base64Decoder from './components/Base64Decoder'
 import AttestationObjectDecoder from './components/AttestationObjectDecoder'
+import DemoCallout from './components/DemoCallout'
 import { cn } from './lib/utils'
 import { Button } from './components/ui/button'
 
@@ -109,6 +110,9 @@ export default function App() {
 
       {/* Main content */}
       <main className="mx-auto max-w-5xl px-4 flex flex-col gap-8 pb-16">
+        {/* Interactive demo call to action */}
+        <DemoCallout />
+
         {/* Tab navigation */}
         <div className="flex gap-1 flex-wrap">
           {TABS.map(tab => (
