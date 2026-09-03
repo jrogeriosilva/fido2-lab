@@ -122,8 +122,8 @@ export function CodeEditor({
   return (
     <div
       className={cn(
-        'w-full rounded-lg border border-[var(--input)] bg-[var(--card)] text-sm font-mono',
-        'overflow-auto focus-within:border-[var(--ring)] focus-within:ring-3 focus-within:ring-[var(--ring)]/50',
+        'w-full rounded-lg border border-[var(--input)] bg-[var(--background)] text-sm font-mono',
+        'overflow-auto focus-within:border-[var(--ring)] focus-within:ring-3 focus-within:ring-[var(--ring)]/30',
         className,
       )}
       style={{ minHeight, maxHeight, position: 'relative' }}

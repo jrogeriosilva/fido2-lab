@@ -30,7 +30,7 @@ function CopyButton({ value, label, className, size = 'sm', variant = 'outline',
       {...props}
     >
       {copied ? (
-        <Check size={14} className="text-green-500" />
+        <Check size={14} className="text-[var(--success)]" />
       ) : (
         <Copy size={14} />
       )}
