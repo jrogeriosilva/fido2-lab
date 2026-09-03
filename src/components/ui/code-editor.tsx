@@ -2,131 +2,173 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { getHighlighter } from '@/lib/shiki'
 
+type Highlighter = Awaited<ReturnType<typeof getHighlighter>>
+
 export interface CodeEditorProps {
   value: string
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   placeholder?: string
-  autoGrow?: boolean
   language?: 'json'
   className?: string
   minHeight?: number
   maxHeight?: number
+  readOnly?: boolean
 }
 
+/**
+ * Overlay code editor.
+ *
+ * A single scroll container (the outer div) wraps a sizing wrapper that holds
+ * the highlighted <pre> and, absolutely positioned on top of it, a transparent
+ * <textarea> of the exact same size. Because neither inner layer scrolls on its
+ * own, the highlight can never drift out of sync with the caret — vertical and
+ * horizontal scrolling are handled once, by the container.
+ */
 export function CodeEditor({
   value,
   onChange,
   placeholder,
-  autoGrow = false,
   language = 'json',
   className,
   minHeight = 120,
   maxHeight = 320,
+  readOnly = false,
 }: CodeEditorProps) {
-  const [html, setHtml] = React.useState<string>('')
-  const [ready, setReady] = React.useState(false)
+  const [highlighter, setHighlighter] = React.useState<Highlighter | null>(null)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const pendingCaret = React.useRef<number | null>(null)
 
-  // Sync textarea height with content for autoGrow
-  const syncHeight = React.useCallback(() => {
-    const el = textareaRef.current
-    if (!el || !autoGrow) return
-    el.style.height = 'auto'
-    el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`
-  }, [autoGrow, maxHeight])
-
-  React.useEffect(() => {
-    syncHeight()
-  }, [value, syncHeight])
-
-  // Highlight via Shiki
   React.useEffect(() => {
     let cancelled = false
-    getHighlighter().then(hl => {
-      if (cancelled) return
-      const highlighted = hl.codeToHtml(value || '', {
-        lang: language,
-        theme: 'one-dark-pro',
-      })
-      if (!cancelled) {
-        setHtml(highlighted)
-        setReady(true)
-      }
-    })
+    getHighlighter().then(
+      hl => { if (!cancelled) setHighlighter(hl) },
+      () => { /* keep the plain-text fallback */ },
+    )
     return () => { cancelled = true }
-  }, [value, language])
+  }, [])
 
-  const baseClasses = cn(
-    'w-full rounded-lg border border-[var(--input)] bg-[var(--card)] text-sm font-mono',
-    'focus-within:border-[var(--ring)] focus-within:ring-3 focus-within:ring-[var(--ring)]/50',
-    'overflow-hidden',
-    className,
-  )
+  // A textarea renders a trailing empty line when the value ends in "\n";
+  // <pre> swallows it. Add one back so both layers stay the same height.
+  const code = value.endsWith('\n') ? `${value}\n` : value
 
-  const sharedTextStyle: React.CSSProperties = {
+  const html = React.useMemo(() => {
+    if (!highlighter || !code) return null
+    try {
+      return highlighter
+        .codeToHtml(code, { lang: language, theme: 'one-dark-pro' })
+        // Drop Shiki's own background/padding so the card color shows through.
+        .replace(/<pre[^>]*>/, '<pre style="margin:0;padding:0;background:transparent;font:inherit;line-height:inherit;">')
+        .replace(/(<code[^>]*)style="[^"]*"/, '$1')
+    } catch {
+      return null
+    }
+  }, [highlighter, code, language])
+
+  // Restore the caret after an edit we performed ourselves (Tab insertion).
+  React.useEffect(() => {
+    const pos = pendingCaret.current
+    if (pos == null) return
+    pendingCaret.current = null
+    const el = textareaRef.current
+    if (el) el.setSelectionRange(pos, pos)
+  }, [value])
+
+  const emitChange = (el: HTMLTextAreaElement, next: string, caret: number) => {
+    el.value = next
+    pendingCaret.current = caret
+    onChange?.({
+      target: el,
+      currentTarget: el,
+    } as React.ChangeEvent<HTMLTextAreaElement>)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== 'Tab' || readOnly) return
+    const el = e.currentTarget
+    const start = el.selectionStart
+    const end = el.selectionEnd
+    e.preventDefault()
+
+    if (e.shiftKey) {
+      // Outdent the line the caret sits on.
+      const lineStart = value.lastIndexOf('\n', start - 1) + 1
+      const removed = value.slice(lineStart).match(/^ {1,2}/)?.[0].length ?? 0
+      if (!removed) return
+      emitChange(
+        el,
+        value.slice(0, lineStart) + value.slice(lineStart + removed),
+        Math.max(lineStart, start - removed),
+      )
+      return
+    }
+
+    emitChange(el, value.slice(0, start) + '  ' + value.slice(end), start + 2)
+  }
+
+  // Both layers must lay text out identically.
+  const textStyle: React.CSSProperties = {
     fontFamily: 'inherit',
     fontSize: 'inherit',
-    lineHeight: '1.5',
+    lineHeight: 1.5,
     padding: '0.5rem 0.625rem',
     margin: 0,
     tabSize: 2,
     whiteSpace: 'pre',
     overflowWrap: 'normal',
     wordBreak: 'normal',
-    overflowX: 'auto',
-    minHeight,
-    maxHeight,
+    border: 0,
   }
 
   return (
-    <div className={baseClasses} style={{ position: 'relative' }}>
-      {/* Highlighted layer */}
-      {ready && (
-        <div
-          aria-hidden
-          className="absolute inset-0 overflow-auto pointer-events-none select-none"
-          style={{ ...sharedTextStyle, background: 'transparent' }}
-          // Shiki wraps output in <pre><code>; we strip the outer box styles
-          dangerouslySetInnerHTML={{
-            __html: html
-              // remove shiki's background so our card color shows through
-              .replace(/style="[^"]*background-color:[^"]*"/g, 'style=""')
-              // remove the outer <pre> border/padding shiki injects
-              .replace(/<pre[^>]*>/, '<pre style="margin:0;padding:0;background:transparent;font:inherit;">')
+    <div
+      className={cn(
+        'w-full rounded-lg border border-[var(--input)] bg-[var(--card)] text-sm font-mono',
+        'overflow-auto focus-within:border-[var(--ring)] focus-within:ring-3 focus-within:ring-[var(--ring)]/50',
+        className,
+      )}
+      style={{ minHeight, maxHeight, position: 'relative' }}
+      onMouseDown={e => {
+        // Clicks on the padding below the last line should still focus the input.
+        if (e.target === e.currentTarget) textareaRef.current?.focus()
+      }}
+    >
+      <div style={{ position: 'relative', width: 'max-content', minWidth: '100%', minHeight }}>
+        {html ? (
+          <div
+            aria-hidden
+            style={{ ...textStyle, pointerEvents: 'none' }}
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        ) : (
+          <pre
+            aria-hidden
+            style={{ ...textStyle, pointerEvents: 'none', color: 'var(--foreground)' }}
+          >
+            {code || ' '}
+          </pre>
+        )}
+
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={onChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          spellCheck={false}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          className="code-editor-input absolute inset-0 h-full w-full resize-none bg-transparent outline-none placeholder:text-[var(--muted-foreground)]"
+          style={{
+            ...textStyle,
+            overflow: 'hidden',
+            color: 'transparent',
+            WebkitTextFillColor: 'transparent',
+            caretColor: 'var(--foreground)',
           }}
         />
-      )}
-      {/* Transparent editing layer on top */}
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={e => {
-          onChange?.(e)
-          syncHeight()
-        }}
-        placeholder={ready ? placeholder : placeholder}
-        spellCheck={false}
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        className={cn(
-          'relative w-full bg-transparent outline-none resize-none',
-          'placeholder:text-[var(--muted-foreground)]',
-          !ready && 'text-[var(--foreground)]',
-          ready && 'text-transparent',
-        )}
-        style={{
-          ...sharedTextStyle,
-          // Keep caret visible over transparent text
-          caretColor: 'var(--foreground)',
-          // Selection still readable
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          WebkitTextFillColor: ready ? 'transparent' : undefined,
-          overflowX: 'hidden',
-          maxHeight,
-          minHeight,
-        }}
-      />
+      </div>
     </div>
   )
 }

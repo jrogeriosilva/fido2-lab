@@ -80,3 +80,14 @@
   background: oklch(1 0 0 / 15%);
   border-radius: 3px;
 }
+
+/* Overlay code editor: the textarea's own text is transparent so the
+   highlighted layer underneath shows through. Placeholder and selection
+   need their colors restored explicitly. */
+.code-editor-input::placeholder {
+  color: var(--muted-foreground);
+  -webkit-text-fill-color: var(--muted-foreground);
+}
+.code-editor-input::selection {
+  background: oklch(0.62 0.13 255 / 40%);
+}
