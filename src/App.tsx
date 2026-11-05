@@ -5,7 +5,6 @@ import {
   ChevronDown,
   Cpu,
   Database,
-  Fingerprint,
   Github,
   KeyRound,
   Lock,
@@ -240,21 +239,10 @@ export default function App() {
       <div aria-hidden className="lab-grid pointer-events-none fixed inset-0 -z-10" />
 
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--background)]/70 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
-          <div className="flex items-center gap-3">
-            <span className="brand-mark flex h-8 w-8 items-center justify-center rounded-lg">
-              <Fingerprint size={17} strokeWidth={2.25} />
-            </span>
-            <div className="leading-tight">
-              <h1 className="text-[15px] font-semibold tracking-tight">FIDO2 Lab</h1>
-              <p className="hidden text-xs text-[var(--muted-foreground)] sm:block">
-                Browser-based testing client for FIDO2 servers
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5">
+      <header className="suite-header">
+        <div className="suite-header-inner">
+          <a className="suite-brand" href="#top"><span className="suite-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg></span><span className="suite-brand-copy"><h1 className="suite-title">FIDO2 Lab</h1><span className="suite-subtitle">FIDO2 · WebAuthn</span></span></a>
+          <div className="suite-actions">
             <ModeMenu mode={mode} onChange={next => { setMode(next); setAssertion(null) }} />
             <a
               href={REPO_URL}
@@ -270,7 +258,7 @@ export default function App() {
       </header>
 
       {/* Main content */}
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 pt-8">
+      <main id="top" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 pt-8">
         <EcosystemNav />
         <DemoCallout />
 
