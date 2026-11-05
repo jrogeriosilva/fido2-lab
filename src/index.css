@@ -19,27 +19,27 @@
 :root,
 .dark {
   --background: #0b1120;
-  --foreground: oklch(0.93 0.01 260);
+  --foreground: #ebebeb;
   --card: #141928;
-  --card-foreground: oklch(0.93 0.01 260);
+  --card-foreground: #ebebeb;
   --popover: #141928;
-  --popover-foreground: oklch(0.93 0.01 260);
-  --primary: oklch(0.88 0 0);
-  --primary-foreground: oklch(0.15 0 0);
+  --popover-foreground: #ebebeb;
+  --primary: #84b0ff;
+  --primary-foreground: #0b1120;
   --secondary: #1a2845;
   --secondary-foreground: oklch(0.93 0.01 260);
   --muted: #1a2845;
-  --muted-foreground: oklch(0.66 0.02 260);
+  --muted-foreground: #a3adbf;
   --accent: #1a2845;
   --accent-foreground: oklch(0.93 0.01 260);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.74 0.12 225);
+  --border: #303b50;
+  --input: #3c4960;
+  --ring: #84b0ff;
 
   /* Brand accent and semantic status colors */
-  --brand: oklch(0.78 0.12 225);
-  --brand-foreground: oklch(0.15 0.04 235);
+  --brand: #84b0ff;
+  --brand-foreground: #0b1120;
   --success: oklch(0.76 0.16 155);
   --warning: oklch(0.8 0.15 85);
   --info: oklch(0.78 0.12 225);
@@ -77,24 +77,8 @@
 }
 
 /* Faint blueprint grid, fading out toward the bottom of the viewport. */
-.lab-grid {
-  background-image:
-    linear-gradient(to right, oklch(1 0 0 / 3.5%) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(1 0 0 / 3.5%) 1px, transparent 1px);
-  background-size: 32px 32px;
-  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 100%);
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 100%);
-}
-
-/* Brand mark used in the header. */
-.brand-mark {
-  background: linear-gradient(135deg, oklch(0.8 0.12 220), oklch(0.6 0.17 270));
-  color: oklch(0.12 0.03 260);
-  box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 35%),
-    0 0 0 1px oklch(1 0 0 / 8%),
-    0 6px 18px oklch(0.7 0.14 235 / 25%);
-}
+.lab-grid { display: none; }
+.brand-mark { background: var(--brand); color: var(--brand-foreground); }
 
 /* Tree view scoped styles */
 .decode-tree-container :where(ul, li) {
@@ -133,14 +117,40 @@
   background: oklch(0.62 0.13 255 / 40%);
 }
 
-/* Shared navigation across the FIDO2 tools. */
-.ecosystem-nav { display:flex; gap:4px; flex-wrap:wrap; padding:0 0 18px; margin-bottom:24px; border-bottom:1px solid #303b50; }
-.ecosystem-nav a { display:flex; flex-direction:column; gap:2px; padding:8px 12px; min-height:44px; border-radius:8px; text-decoration:none; color:#a3adbf; font-size:12px; line-height:1.4; }
-.ecosystem-nav a span:first-child { font-size:14px; font-weight:600; color:#ebebeb; }
-.ecosystem-nav a:hover, .ecosystem-nav a[aria-current] { background:#1a2845; }
-.ecosystem-nav a[aria-current] span:first-child { color:#84b0ff; }
-.ecosystem-nav a:focus-visible { outline:2px solid #84b0ff; outline-offset:2px; }
-@media (max-width:480px) { .ecosystem-nav { gap:2px; } .ecosystem-nav a { padding:8px; flex:1; } .ecosystem-nav a span:last-child { font-size:10px; } }
+/* Shared FIDO2 workspace navigation. Keep aligned across the three apps. */
+.ecosystem-nav {
+  display: flex;
+  gap: 8px;
+  padding: 0 0 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #303b50;
+}
+.ecosystem-nav a {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: #a3adbf;
+  font-size: 12px;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.ecosystem-nav a span:first-child { color: #ebebeb; font-size: 14px; font-weight: 600; }
+.ecosystem-nav a:hover { background: #141928; border-color: #303b50; }
+.ecosystem-nav a[aria-current] { background: #203455; border-color: #45618c; }
+.ecosystem-nav a[aria-current] span:first-child { color: #a9c8ff; }
+.ecosystem-nav a:focus-visible { outline: 2px solid #84b0ff; outline-offset: 3px; }
+@media (max-width: 480px) {
+  .ecosystem-nav { gap: 4px; }
+  .ecosystem-nav a { padding: 10px 8px; }
+  .ecosystem-nav a span:last-child { font-size: 11px; overflow-wrap: anywhere; }
+}
 
 ::selection { background:#203455; color:#ebebeb; }
 :focus-visible { outline:2px solid #84b0ff; outline-offset:3px; }
@@ -151,3 +161,10 @@ select { min-height:44px; }
 }
 
 @media (hover:none) { .tree-copy { opacity:1; } }
+
+body { background-image: none; color-scheme: dark; }
+input, textarea { caret-color: #84b0ff; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
