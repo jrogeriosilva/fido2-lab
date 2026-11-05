@@ -3,14 +3,14 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent text-sm font-medium whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 active:translate-y-px focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--ring)]/50',
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-transparent text-sm font-medium whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 active:translate-y-px focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--ring)]/40 [&>svg]:shrink-0',
   {
     variants: {
       variant: {
         default:
-          'bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[oklch(0.80_0_0)]',
+          'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_1px_0_0_oklch(1_0_0/40%)_inset,0_1px_2px_oklch(0_0_0/40%)] hover:bg-[oklch(0.80_0_0)]',
         outline:
-          'border-[var(--border)] bg-[var(--background)] hover:bg-[var(--muted)] text-[var(--foreground)]',
+          'border-[var(--border)] bg-[var(--card)] hover:bg-[var(--muted)] hover:border-[oklch(1_0_0/18%)] text-[var(--foreground)]',
         secondary:
           'bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[#223260]',
         ghost:
@@ -20,8 +20,8 @@ const buttonVariants = cva(
         link: 'text-[var(--primary)] underline-offset-4 hover:underline',
       },
       size: {
-        xs: 'h-6 px-2 text-xs rounded-[min(var(--radius-md),10px)]',
-        sm: 'h-7 px-3 text-xs rounded-[min(var(--radius-md),12px)]',
+        xs: 'h-6 px-2 text-xs gap-1.5 rounded-[min(var(--radius-md),10px)]',
+        sm: 'h-7 px-3 text-xs gap-1.5 rounded-[min(var(--radius-md),12px)]',
         default: 'h-8 px-4',
         lg: 'h-9 px-5',
         icon: 'h-8 w-8',
