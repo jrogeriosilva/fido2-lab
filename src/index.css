@@ -55,11 +55,6 @@
   }
   body {
     background-color: var(--background);
-    background-image:
-      radial-gradient(ellipse 80% 55% at 50% -10%, oklch(0.45 0.12 255 / 30%), transparent 70%),
-      radial-gradient(ellipse 50% 40% at 100% 0%, oklch(0.62 0.13 205 / 10%), transparent 65%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
     color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -77,8 +72,6 @@
   }
 }
 
-/* Faint blueprint grid, fading out toward the bottom of the viewport. */
-.lab-grid { display: none; }
 .brand-mark { background: var(--brand); color: var(--brand-foreground); }
 
 /* Tree view scoped styles */

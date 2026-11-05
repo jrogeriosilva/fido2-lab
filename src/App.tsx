@@ -234,7 +234,6 @@ export default function App() {
 
   return (
     <div className="relative flex min-h-screen flex-col">
-      <div aria-hidden className="lab-grid pointer-events-none fixed inset-0 -z-10" />
 
       {/* Header */}
       <header className="suite-header">
@@ -292,7 +291,7 @@ export default function App() {
                     'flex min-h-11 flex-auto items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--ring)]/40',
                     active
-                      ? 'bg-[var(--secondary)] text-[var(--foreground)] shadow-[0_1px_0_0_oklch(1_0_0/6%)_inset,0_1px_2px_oklch(0_0_0/35%)]'
+                      ? 'bg-[var(--secondary)] text-[var(--foreground)]'
                       : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50 hover:text-[var(--foreground)]',
                   )}
                 >
@@ -310,11 +309,10 @@ export default function App() {
           id="tool-panel"
           aria-labelledby={`tab-${activeTab}`}
           tabIndex={0}
-          className="animate-in fade-in-0 slide-in-from-bottom-1 duration-300"
         >
           <CardHeader>
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--brand)]/12 text-[var(--brand)]">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center text-[var(--brand)]">
                 <CurrentIcon size={16} />
               </span>
               <div className="flex flex-col gap-1">
