@@ -40,9 +40,7 @@ export default function SigningPanel({ mode, refreshKey, onAssertionGenerated }:
       ? allCredentials.filter(c => c.type === 'hardware')
       : allCredentials.filter(c => c.type === 'simulated')
     setCredentials(filtered)
-    if (selectedCredentialId && !filtered.find(c => c.id === selectedCredentialId)) {
-      setSelectedCredentialId('')
-    }
+    setSelectedCredentialId(current => filtered.some(c => c.id === current) ? current : '')
   }, [refreshKey, mode])
 
   useEffect(() => {
@@ -114,7 +112,7 @@ export default function SigningPanel({ mode, refreshKey, onAssertionGenerated }:
         <code className="font-mono text-xs bg-[var(--muted)] px-1 rounded">challenge</code> field is required.
       </p>
 
-      <CodeEditor
+      <CodeEditor label="Authentication options (JSON)"
         language="json"
         value={jsonInput}
         onChange={e => setJsonInput(e.target.value)}
@@ -125,7 +123,7 @@ export default function SigningPanel({ mode, refreshKey, onAssertionGenerated }:
 
       {!autoSelected && (
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
+          <label htmlFor="signing-credential" className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
             Credential
           </label>
           <div
@@ -133,6 +131,7 @@ export default function SigningPanel({ mode, refreshKey, onAssertionGenerated }:
             style={{ borderColor: 'var(--input)', backgroundColor: 'var(--card)' }}
           >
             <select
+              id="signing-credential"
               value={selectedCredentialId}
               onChange={e => setSelectedCredentialId(e.target.value)}
               className="w-full px-2.5 py-2 text-sm font-mono bg-transparent outline-none"
@@ -150,6 +149,7 @@ export default function SigningPanel({ mode, refreshKey, onAssertionGenerated }:
               ))}
             </select>
           </div>
+          {credentials.length === 0 && <p className="text-sm text-[var(--muted-foreground)]">Create a credential in Create Credential, then return here to sign a challenge.</p>}
         </div>
       )}
 
@@ -171,7 +171,7 @@ export default function SigningPanel({ mode, refreshKey, onAssertionGenerated }:
             {error}
           </div>
         )}
-        {success && <Badge variant="secondary">{success}</Badge>}
+        {success && <span role="status"><Badge variant="secondary">{success}</Badge></span>}
       </div>
 
       <Button

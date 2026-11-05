@@ -6,6 +6,8 @@ import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { CodeEditor } from './ui/code-editor'
 import JsonDisplay from './JsonDisplay'
+import KeyGeneratorButton from './KeyGeneratorButton'
+import { DecoderActions } from './DecoderActions'
 
 const DEFAULT_JSON = {
   rp: { name: 'Rogerio Bank' },
@@ -146,6 +148,7 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
         setSuccess(`Simulated credential created (${algorithm}).`)
       }
 
+      setSelectedKeyId('')
       onCredentialCreated?.()
     } catch (err) {
       setError((err as Error).message)
@@ -162,6 +165,7 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
       </p>
 
       <CodeEditor
+        label="Credential creation options (JSON)"
         language="json"
         value={jsonInput}
         onChange={e => setJsonInput(e.target.value)}
@@ -172,7 +176,7 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
 
       {mode === 'simulated' && (
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
+          <label htmlFor="creation-key" className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
             Pre-generated key <span style={{ color: 'var(--destructive)' }}>*</span>
           </label>
           <div
@@ -180,13 +184,15 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
             style={{ borderColor: 'var(--input)', backgroundColor: 'var(--card)' }}
           >
             <select
+              id="creation-key"
+              aria-describedby="key-help"
               value={selectedKeyId}
               onChange={e => setSelectedKeyId(e.target.value)}
               className="w-full px-2.5 py-2 text-sm font-mono bg-transparent outline-none"
               style={{ color: 'var(--foreground)' }}
             >
               <option value="" style={{ backgroundColor: 'var(--card)' }}>
-                {generatedKeys.length === 0 ? 'No keys available — generate one in Credentials tab' : 'Select a key…'}
+                {generatedKeys.length === 0 ? 'No key generated yet' : 'Select a key…'}
               </option>
               {generatedKeys.map(k => (
                 <option key={k.id} value={k.id} style={{ backgroundColor: 'var(--card)' }}>
@@ -195,6 +201,13 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
               ))}
             </select>
           </div>
+          <p id="key-help" className="text-sm text-[var(--muted-foreground)]">
+            {generatedKeys.length === 0 ? 'Generate a test key below to enable credential creation.' : 'Choose an available test key or generate a new one below.'}
+          </p>
+          <details open={generatedKeys.length === 0 ? true : undefined}>
+            <summary className="cursor-pointer py-3 text-sm">Generate a test key</summary>
+            <KeyGeneratorButton onKeyGenerated={key => { if (key) setSelectedKeyId(key.id); onCredentialCreated?.() }} />
+          </details>
         </div>
       )}
 
@@ -209,7 +222,7 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
           </div>
         )}
         {success && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" role="status">
             <Badge variant="secondary">{success}</Badge>
           </div>
         )}
@@ -226,6 +239,7 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
       {result && (
         <div className="flex flex-col gap-2 mt-2">
           <h3 className="text-sm font-semibold">Created Credential</h3>
+          <DecoderActions data={result} />
           <JsonDisplay data={result} maxHeight={600} />
         </div>
       )}

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { ChevronDown, Cpu, Usb } from 'lucide-react'
 import CreateCredentialForm from './components/CreateCredentialForm'
 import SigningPanel from './components/SigningPanel'
 import AssertionDisplay from './components/AssertionDisplay'
@@ -8,7 +7,7 @@ import CredentialManager from './components/CredentialManager'
 import Base64Decoder from './components/Base64Decoder'
 import AttestationObjectDecoder from './components/AttestationObjectDecoder'
 import { cn } from './lib/utils'
-import { Button } from './components/ui/button'
+import { EcosystemNav } from './components/EcosystemNav'
 
 type Tab = 'create' | 'sign' | 'base64' | 'attest' | 'creds'
 type Mode = 'simulated' | 'hardware'
@@ -34,7 +33,6 @@ export default function App() {
   const [assertion, setAssertion] = useState<AssertionData | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [activeTab, setActiveTab] = useState<Tab>('create')
-  const [modeMenuOpen, setModeMenuOpen] = useState(false)
 
   const handleCredentialCreated = () => setRefreshKey(k => k + 1)
   const handleAssertionGenerated = (a: AssertionData) => setAssertion(a)
@@ -42,7 +40,8 @@ export default function App() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
       {/* Header */}
-      <header className="mx-auto max-w-5xl flex items-center justify-between py-6 px-4">
+      <div className="mx-auto max-w-5xl px-4 pt-6"><EcosystemNav /></div>
+      <header className="mx-auto max-w-5xl flex flex-wrap gap-4 items-center justify-between pb-6 px-4">
         <div>
           <h1 className="text-xl font-semibold leading-tight">FIDO2 Lab</h1>
           <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
@@ -50,73 +49,31 @@ export default function App() {
           </p>
         </div>
 
-        {/* Mode dropdown */}
-        <div className="relative">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={() => setModeMenuOpen(o => !o)}
-          >
-            {mode === 'simulated' ? <Cpu size={14} /> : <Usb size={14} />}
-            <span>{mode === 'simulated' ? 'Simulated' : 'Hardware'}</span>
-            <ChevronDown size={14} style={{ opacity: 0.7 }} />
-          </Button>
-
-          {modeMenuOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setModeMenuOpen(false)} />
-              <div
-                className="absolute right-0 top-full mt-1 z-50 rounded-md border p-1 shadow-md min-w-[280px] max-w-[360px]"
-                style={{ backgroundColor: 'var(--popover)', borderColor: 'var(--border)' }}
-              >
-                {([
-                  {
-                    value: 'simulated' as Mode,
-                    icon: <Cpu size={14} />,
-                    title: 'Simulated',
-                    desc: 'Generate keys and sign internally via SubtleCrypto. No hardware required.',
-                  },
-                  {
-                    value: 'hardware' as Mode,
-                    icon: <Usb size={14} />,
-                    title: 'Hardware (WebAuthn)',
-                    desc: 'Use a real authenticator via navigator.credentials — FIDO2/WebAuthn API.',
-                  },
-                ] as const).map(item => (
-                  <button
-                    key={item.value}
-                    onClick={() => { setMode(item.value); setModeMenuOpen(false) }}
-                    className={cn(
-                      'w-full text-left rounded-sm px-2 py-1.5 text-sm transition-colors',
-                      mode === item.value ? 'bg-[var(--muted)]' : 'hover:bg-[var(--muted)]'
-                    )}
-                  >
-                    <div className="flex items-center gap-2 font-medium leading-tight">
-                      {item.icon}
-                      {item.title}
-                    </div>
-                    <p className="mt-0.5 text-xs leading-snug" style={{ color: 'var(--muted-foreground)' }}>
-                      {item.desc}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+        <div className="flex flex-col gap-1 shrink-0">
+          <label htmlFor="authenticator-mode" className="text-xs text-[var(--muted-foreground)]">Authenticator mode</label>
+          <select id="authenticator-mode" value={mode}
+            onChange={e => { setMode(e.target.value as Mode); setAssertion(null) }}
+            className="rounded-lg border border-[var(--input)] bg-[var(--card)] px-3 py-2 text-sm min-h-11">
+            <option value="simulated">Simulated</option>
+            <option value="hardware">Hardware (WebAuthn)</option>
+          </select>
         </div>
       </header>
 
       {/* Main content */}
       <main className="mx-auto max-w-5xl px-4 flex flex-col gap-8 pb-16">
-        {/* Tab navigation */}
-        <div className="flex gap-1 flex-wrap">
+        <p className="text-sm text-[var(--muted-foreground)]" role="status">
+          {mode === 'simulated' ? 'Simulated mode: generate a test key, create a credential, then sign a challenge. Test keys are stored in this browser.' : 'Hardware mode: use your system authenticator through WebAuthn. Your browser will ask you to confirm.'}
+        </p>
+        {/* Task navigation */}
+        <div className="flex gap-1 flex-wrap" role="group" aria-label="Lab tasks">
           {TABS.map(tab => (
             <button
               key={tab.id}
+              aria-pressed={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'px-3 h-8 rounded-lg text-sm font-medium transition-colors',
+                'px-3 min-h-11 rounded-lg text-sm font-medium transition-colors',
                 activeTab === tab.id
                   ? 'text-[var(--foreground)]'
                   : 'hover:text-[var(--foreground)] hover:bg-[var(--muted)]'
@@ -131,23 +88,23 @@ export default function App() {
           ))}
         </div>
 
-        {activeTab === 'create' && (
+        <section id="panel-create" aria-label="Create Credential" hidden={activeTab !== 'create'}>
           <CreateCredentialForm mode={mode} onCredentialCreated={handleCredentialCreated} />
-        )}
+        </section>
 
-        {activeTab === 'sign' && (
+        <section id="panel-sign" aria-label="Sign / Assert" hidden={activeTab !== 'sign'}>
           <div className="flex flex-col gap-8">
             <SigningPanel mode={mode} refreshKey={refreshKey} onAssertionGenerated={handleAssertionGenerated} />
             {assertion && <AssertionDisplay assertion={assertion} />}
           </div>
-        )}
+        </section>
 
-        {activeTab === 'base64' && <Base64Decoder />}
+        {activeTab === 'base64' && <section id="panel-base64"><Base64Decoder /></section>}
 
-        {activeTab === 'attest' && <AttestationObjectDecoder />}
+        {activeTab === 'attest' && <section id="panel-attest"><p className="text-sm text-[var(--muted-foreground)] mb-4">Quick CBOR inspection. For full credential responses and field-by-field analysis, use <a className="underline" href="https://jrogeriosilva.github.io/webauthn-decoder/">WebAuthn Decoder</a>.</p><AttestationObjectDecoder /></section>}
 
         {activeTab === 'creds' && (
-          <div className="flex flex-col gap-6">
+          <div id="panel-creds" className="flex flex-col gap-6">
             {mode === 'simulated' && (
               <section>
                 <h2 className="text-lg font-semibold mb-3">Key Generator</h2>

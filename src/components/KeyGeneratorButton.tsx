@@ -7,7 +7,7 @@ import { Badge } from './ui/badge'
 import { CopyButton } from './ui/copy-button'
 
 interface Props {
-  onKeyGenerated?: () => void
+  onKeyGenerated?: (key?: GeneratedKey) => void
 }
 
 export default function KeyGeneratorButton({ onKeyGenerated }: Props) {
@@ -26,11 +26,11 @@ export default function KeyGeneratorButton({ onKeyGenerated }: Props) {
     setFlash(null)
     try {
       const keyPair = await generateKeyPairForStorage(algorithm)
-      saveGeneratedKey(keyPair)
+      if (!saveGeneratedKey(keyPair)) throw new Error('Could not save the key in this browser. Check browser storage settings and try again.')
       refresh()
       setFlash(`Key generated · ${algorithm}`)
       setTimeout(() => setFlash(null), 1500)
-      onKeyGenerated?.()
+      onKeyGenerated?.(keyPair)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -53,6 +53,7 @@ export default function KeyGeneratorButton({ onKeyGenerated }: Props) {
           style={{ borderColor: 'var(--input)', backgroundColor: 'var(--card)' }}
         >
           <select
+            aria-label="Key algorithm"
             value={algorithm}
             onChange={e => setAlgorithm(e.target.value)}
             className="px-2.5 py-1.5 text-sm font-mono bg-transparent outline-none h-8"

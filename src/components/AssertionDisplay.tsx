@@ -1,3 +1,4 @@
+import { DecoderActions } from './DecoderActions'
 import JsonDisplay from './JsonDisplay'
 import { CopyButton } from './ui/copy-button'
 
@@ -40,10 +41,11 @@ export default function AssertionDisplay({ assertion }: AssertionDisplayProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap gap-3 items-center justify-between mb-3">
         <h2 className="text-lg font-semibold">Generated Assertion</h2>
         <CopyButton value={jsonString} label="Copy all" />
       </div>
+      <DecoderActions data={formatted} />
       <JsonDisplay data={formatted} maxHeight={600} />
     </div>
   )

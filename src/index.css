@@ -29,13 +29,13 @@
   --secondary: #1a2845;
   --secondary-foreground: oklch(0.92 0 0);
   --muted: #1a2845;
-  --muted-foreground: oklch(0.62 0 0);
+  --muted-foreground: #a3adbf;
   --accent: #1a2845;
   --accent-foreground: oklch(0.92 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.55 0 0);
+  --ring: #84b0ff;
 }
 
 @layer base {
@@ -80,3 +80,22 @@
   background: oklch(1 0 0 / 15%);
   border-radius: 3px;
 }
+
+/* Shared navigation across the FIDO2 tools. */
+.ecosystem-nav { display:flex; gap:4px; flex-wrap:wrap; padding:0 0 18px; margin-bottom:24px; border-bottom:1px solid #303b50; }
+.ecosystem-nav a { display:flex; flex-direction:column; gap:2px; padding:8px 12px; min-height:44px; border-radius:8px; text-decoration:none; color:#a3adbf; font-size:12px; line-height:1.4; }
+.ecosystem-nav a span:first-child { font-size:14px; font-weight:600; color:#ebebeb; }
+.ecosystem-nav a:hover, .ecosystem-nav a[aria-current] { background:#1a2845; }
+.ecosystem-nav a[aria-current] span:first-child { color:#84b0ff; }
+.ecosystem-nav a:focus-visible { outline:2px solid #84b0ff; outline-offset:2px; }
+@media (max-width:480px) { .ecosystem-nav { gap:2px; } .ecosystem-nav a { padding:8px; flex:1; } .ecosystem-nav a span:last-child { font-size:10px; } }
+
+::selection { background:#203455; color:#ebebeb; }
+:focus-visible { outline:2px solid #84b0ff; outline-offset:3px; }
+select { min-height:44px; }
+@media (pointer:coarse) {
+  button, [data-slot="button"] { min-height:44px; }
+  button:has(> svg:only-child) { min-width:44px; }
+}
+
+@media (hover:none) { .tree-copy { opacity:1; } }

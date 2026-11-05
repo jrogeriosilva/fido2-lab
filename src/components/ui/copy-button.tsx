@@ -23,6 +23,7 @@ function CopyButton({ value, label, className, size = 'sm', variant = 'outline',
 
   return (
     <Button
+      aria-label={copied ? 'Copied' : (label || 'Copy JSON')}
       variant={variant}
       size={size}
       className={cn('gap-1.5', className)}

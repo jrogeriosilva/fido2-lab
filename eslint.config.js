@@ -27,6 +27,7 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
+      'react-refresh/only-export-components': ['error', { allowExportNames: ['buttonVariants', 'badgeVariants'] }],
     },
   },
 ])

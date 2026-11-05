@@ -16,9 +16,11 @@ function CredentialRow({ credential, onDelete }: { credential: StoredCredential;
   return (
     <div className="rounded-md border" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}>
       {/* Header row */}
-      <div className="flex items-center justify-between px-3 py-2.5">
+      <div className="flex flex-wrap gap-3 items-center justify-between px-3 py-2.5">
         <div className="flex items-center gap-2 flex-wrap">
           <button
+            aria-expanded={expanded}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} credential ${credential.id}`}
             onClick={() => setExpanded(e => !e)}
             className="flex items-center gap-1 text-sm font-medium hover:text-[var(--foreground)] transition-colors"
             style={{ color: 'var(--foreground)' }}

@@ -4,6 +4,7 @@ import { getHighlighter } from '@/lib/shiki'
 
 export interface CodeEditorProps {
   value: string
+  label?: string
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   placeholder?: string
   autoGrow?: boolean
@@ -15,6 +16,7 @@ export interface CodeEditorProps {
 
 export function CodeEditor({
   value,
+  label = 'JSON options',
   onChange,
   placeholder,
   autoGrow = false,
@@ -25,6 +27,7 @@ export function CodeEditor({
 }: CodeEditorProps) {
   const [html, setHtml] = React.useState<string>('')
   const [ready, setReady] = React.useState(false)
+  const highlightRef = React.useRef<HTMLDivElement>(null)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
   // Sync textarea height with content for autoGrow
@@ -84,6 +87,7 @@ export function CodeEditor({
       {ready && (
         <div
           aria-hidden
+          ref={highlightRef}
           className="absolute inset-0 overflow-auto pointer-events-none select-none"
           style={{ ...sharedTextStyle, background: 'transparent' }}
           // Shiki wraps output in <pre><code>; we strip the outer box styles
@@ -99,6 +103,13 @@ export function CodeEditor({
       {/* Transparent editing layer on top */}
       <textarea
         ref={textareaRef}
+        aria-label={label}
+        onScroll={e => {
+          if (highlightRef.current) {
+            highlightRef.current.scrollTop = e.currentTarget.scrollTop
+            highlightRef.current.scrollLeft = e.currentTarget.scrollLeft
+          }
+        }}
         value={value}
         onChange={e => {
           onChange?.(e)
@@ -120,9 +131,8 @@ export function CodeEditor({
           // Keep caret visible over transparent text
           caretColor: 'var(--foreground)',
           // Selection still readable
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           WebkitTextFillColor: ready ? 'transparent' : undefined,
-          overflowX: 'hidden',
+          overflowX: 'auto',
           maxHeight,
           minHeight,
         }}

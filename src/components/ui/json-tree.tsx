@@ -8,8 +8,8 @@ const COLORS = {
   string: '#98c379',
   number: '#61afef',
   boolean: '#e5c07b',
-  null: '#6b737c',
-  punctuation: '#6b737c',
+  null: '#a3adbf',
+  punctuation: '#a3adbf',
 }
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }
@@ -33,7 +33,7 @@ function NodeCopyButton({ value }: NodeCopyButtonProps) {
   return (
     <button
       onClick={handleCopy}
-      className="ml-1.5 opacity-0 group-hover/val:opacity-100 transition-opacity rounded px-1 py-0.5 text-[11px] hover:bg-white/10 active:bg-white/20"
+      className="tree-copy ml-1.5 opacity-0 focus:opacity-100 group-hover/val:opacity-100 transition-opacity rounded px-1 py-0.5 text-[11px] hover:bg-white/10 active:bg-white/20"
       title="Copy value"
     >
       {copied ? (
@@ -54,7 +54,7 @@ interface TreeNodeProps {
 
 function TreeNode({ keyName, value, depth, isLast }: TreeNodeProps) {
   const [expanded, setExpanded] = React.useState(depth < 2)
-  const indent = depth * 14
+  const indent = depth === 0 ? 0 : 14
 
   const isObject = value !== null && typeof value === 'object' && !Array.isArray(value)
   const isArray = Array.isArray(value)
@@ -83,8 +83,10 @@ function TreeNode({ keyName, value, depth, isLast }: TreeNodeProps) {
     <div style={{ paddingLeft: `${indent}px` }}>
       {isCollapsible ? (
         <>
-          <div
-            className="flex items-center cursor-pointer hover:bg-white/5 rounded px-1 -mx-1 select-none"
+          <button type="button"
+            className="flex items-center text-left cursor-pointer hover:bg-white/5 rounded px-1 -mx-1 select-none"
+            aria-expanded={expanded}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${keyName ?? 'JSON'}`}
             onClick={() => setExpanded(e => !e)}
           >
             <span className="mr-0.5" style={{ color: COLORS.punctuation }}>
@@ -104,7 +106,7 @@ function TreeNode({ keyName, value, depth, isLast }: TreeNodeProps) {
               </>
             )}
             {expanded && <span style={{ color: COLORS.punctuation }} className="ml-1 text-[11px]">{entries.length} {isArray ? 'items' : 'keys'}</span>}
-          </div>
+          </button>
           {expanded && (
             <>
               <div>
