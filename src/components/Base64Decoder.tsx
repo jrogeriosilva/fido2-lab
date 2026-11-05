@@ -47,9 +47,11 @@ export default function Base64Decoder() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-stretch">
         <Field
           label="Input"
+          htmlFor="base64-input"
           action={input ? <CopyButton value={input} size="xs" variant="ghost" /> : undefined}
         >
           <Textarea
+            id="base64-input"
             value={input}
             onChange={e => { setInput(e.target.value); setError('') }}
             placeholder="Enter text to encode, or paste a base64url string to decode…"

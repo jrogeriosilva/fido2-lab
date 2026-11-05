@@ -21,7 +21,6 @@ import CredentialManager from './components/CredentialManager'
 import Base64Decoder from './components/Base64Decoder'
 import AttestationObjectDecoder from './components/AttestationObjectDecoder'
 import { EcosystemNav } from './components/EcosystemNav'
-import DemoCallout from './components/DemoCallout'
 import { cn } from './lib/utils'
 import { Button, buttonVariants } from './components/ui/button'
 import { Badge } from './components/ui/badge'
@@ -158,7 +157,7 @@ function ModeMenu({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void 
           <div
             role="menu"
             className={cn(
-              'absolute right-0 top-full z-50 mt-1.5 w-[300px] rounded-xl border border-[var(--border)] bg-[var(--popover)] p-1',
+              'absolute right-0 top-full z-50 mt-1.5 w-[min(300px,calc(100vw-80px))] rounded-xl border border-[var(--border)] bg-[var(--popover)] p-1',
               'shadow-[0_12px_40px_-8px_oklch(0_0_0/70%)] animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150',
             )}
           >
@@ -249,6 +248,7 @@ export default function App() {
               target="_blank"
               rel="noopener noreferrer"
               title="View source on GitHub"
+              aria-label="View source on GitHub"
               className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'text-[var(--muted-foreground)]')}
             >
               <Github size={16} />
@@ -258,15 +258,15 @@ export default function App() {
       </header>
 
       {/* Main content */}
-      <main id="top" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 pt-8">
+      <main id="top" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-12 pt-5 sm:pb-16 sm:pt-8">
         <EcosystemNav />
-        <DemoCallout />
 
         {/* Tab navigation */}
-        <nav aria-label="Tools" className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav aria-label="Tools" className="min-w-0">
           <div
             role="tablist"
-            className="inline-flex min-w-full items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--card)]/80 p-1 sm:min-w-0"
+            aria-label="Tools"
+            className="flex flex-wrap items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--card)] p-1"
           >
             {TABS.map(tab => {
               const active = tab.id === activeTab
@@ -275,6 +275,8 @@ export default function App() {
                 <button
                   key={tab.id}
                   role="tab"
+                  id={`tab-${tab.id}`}
+                  aria-controls="tool-panel"
                   aria-selected={active}
                   tabIndex={active ? 0 : -1}
                   onKeyDown={e => {
@@ -288,7 +290,7 @@ export default function App() {
                   }}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    'flex h-8 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-all',
+                    'flex min-h-11 flex-auto items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--ring)]/40',
                     active
                       ? 'bg-[var(--secondary)] text-[var(--foreground)] shadow-[0_1px_0_0_oklch(1_0_0/6%)_inset,0_1px_2px_oklch(0_0_0/35%)]'
@@ -306,6 +308,9 @@ export default function App() {
         {/* Active panel */}
         <Card
           role="tabpanel"
+          id="tool-panel"
+          aria-labelledby={`tab-${activeTab}`}
+          tabIndex={0}
           className="animate-in fade-in-0 slide-in-from-bottom-1 duration-300"
         >
           <CardHeader>

@@ -8,7 +8,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_1px_0_0_oklch(1_0_0/40%)_inset,0_1px_2px_oklch(0_0_0/40%)] hover:bg-[oklch(0.80_0_0)]',
+          'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_1px_0_0_oklch(1_0_0/40%)_inset,0_1px_2px_oklch(0_0_0/40%)] hover:bg-[var(--primary-hover)]',
         outline:
           'border-[var(--border)] bg-[var(--card)] hover:bg-[var(--muted)] hover:border-[oklch(1_0_0/18%)] text-[var(--foreground)]',
         secondary:

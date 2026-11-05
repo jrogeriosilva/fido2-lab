@@ -6,7 +6,6 @@ function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
     <div
       className={cn(
         'rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)]',
-        'shadow-[0_1px_0_0_oklch(1_0_0/4%)_inset,0_8px_24px_-12px_oklch(0_0_0/60%)]',
         className,
       )}
       {...props}
@@ -38,7 +37,7 @@ function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElem
 function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn('text-sm leading-snug text-[var(--muted-foreground)]', className)}
+      className={cn('text-sm leading-relaxed [overflow-wrap:anywhere] text-[var(--muted-foreground)]', className)}
       {...props}
     />
   )

@@ -25,6 +25,7 @@
   --popover: #141928;
   --popover-foreground: #ebebeb;
   --primary: #84b0ff;
+  --primary-hover: #a9c8ff;
   --primary-foreground: #0b1120;
   --secondary: #1a2845;
   --secondary-foreground: oklch(0.93 0.01 260);
@@ -122,7 +123,7 @@
   display: flex;
   gap: 8px;
   padding: 0 0 24px;
-  margin-bottom: 24px;
+  margin-bottom: 0;
   border-bottom: 1px solid #303b50;
 }
 .ecosystem-nav a {
@@ -156,7 +157,9 @@
 :focus-visible { outline:2px solid #84b0ff; outline-offset:3px; }
 select { min-height:44px; }
 @media (pointer:coarse) {
-  button, [data-slot="button"] { min-height:44px; }
+  button, [data-slot="button"], .suite-actions a, footer a { min-height:44px; }
+  .suite-actions a { min-width:44px; }
+  footer a { display:inline-flex; align-items:center; }
   button:has(> svg:only-child) { min-width:44px; }
 }
 
