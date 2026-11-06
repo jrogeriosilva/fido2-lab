@@ -167,27 +167,6 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
 
   return (
     <div className="flex flex-col gap-5">
-      <Field
-        label="Creation options (JSON)"
-        hint={
-          <>
-            A <InlineCode>PublicKeyCredentialCreationOptions</InlineCode> object.
-            The <InlineCode>challenge</InlineCode> field is required;{' '}
-            <InlineCode>rp</InlineCode>, <InlineCode>user</InlineCode> and{' '}
-            <InlineCode>pubKeyCredParams</InlineCode> are honoured when present.
-          </>
-        }
-      >
-        <CodeEditor label="Credential creation options (JSON)"
-          language="json"
-          value={jsonInput}
-          onChange={e => setJsonInput(e.target.value)}
-          placeholder="Paste PublicKeyCredentialCreationOptions JSON…"
-          minHeight={320}
-          maxHeight={600}
-        />
-      </Field>
-
       {mode === 'simulated' && (
         <Field
           label="Pre-generated key"
@@ -221,6 +200,27 @@ export default function CreateCredentialForm({ mode, onCredentialCreated }: Prop
         <summary className="cursor-pointer py-3 text-sm">Generate a test key</summary>
         <KeyGeneratorButton onKeyGenerated={key => { if (key) setSelectedKeyId(key.id); onCredentialCreated?.() }} />
       </details>}
+
+      <Field
+        label="Creation options (JSON)"
+        hint={
+          <>
+            A <InlineCode>PublicKeyCredentialCreationOptions</InlineCode> object.
+            The <InlineCode>challenge</InlineCode> field is required;{' '}
+            <InlineCode>rp</InlineCode>, <InlineCode>user</InlineCode> and{' '}
+            <InlineCode>pubKeyCredParams</InlineCode> are honoured when present.
+          </>
+        }
+      >
+        <CodeEditor label="Credential creation options (JSON)"
+          language="json"
+          value={jsonInput}
+          onChange={e => setJsonInput(e.target.value)}
+          placeholder="Paste PublicKeyCredentialCreationOptions JSON…"
+          minHeight={180}
+          maxHeight={260}
+        />
+      </Field>
 
       {error && <Alert variant="destructive">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}

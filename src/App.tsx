@@ -256,7 +256,7 @@ export default function App() {
       </header>
 
       {/* Main content */}
-      <main id="top" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-12 pt-5 sm:pb-16 sm:pt-8">
+      <main id="top" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 sm:gap-6 px-4 pb-12 pt-5 sm:pb-16 sm:pt-8">
         <EcosystemNav />
 
         {/* Tab navigation */}
@@ -264,7 +264,7 @@ export default function App() {
           <div
             role="tablist"
             aria-label="Tools"
-            className="flex flex-wrap items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--card)] p-1"
+            className="flex flex-nowrap overflow-x-auto sm:flex-wrap items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--card)] p-1"
           >
             {TABS.map(tab => {
               const active = tab.id === activeTab
@@ -288,7 +288,7 @@ export default function App() {
                   }}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    'flex min-h-11 flex-auto items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    'flex min-h-11 shrink-0 sm:flex-auto items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[var(--ring)]/40',
                     active
                       ? 'bg-[var(--secondary)] text-[var(--foreground)]'

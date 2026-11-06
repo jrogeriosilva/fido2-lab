@@ -175,3 +175,27 @@ input, textarea { caret-color: #84b0ff; }
 .suite-subtitle { margin: 0; color: #a3adbf; font-size: 12px; line-height: 16px; }
 .suite-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 @media (max-width: 639px) { .suite-subtitle { display: none; } }
+
+/* Keep related tools available without displacing the mobile workspace. */
+.ecosystem-disclosure > summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+.ecosystem-disclosure > summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+@media (min-width: 640px) {
+  .ecosystem-disclosure > summary { display: none; }
+  .ecosystem-disclosure::details-content { content-visibility: visible; }
+  .ecosystem-disclosure:not([open]) > .ecosystem-nav { display: flex; }
+}
+@media (max-width: 639px), (pointer: coarse) {
+  button, select, summary, .suite-actions a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

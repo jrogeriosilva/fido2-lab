@@ -38,7 +38,6 @@ export function CodeEditor({
 }: CodeEditorProps) {
   const [highlighter, setHighlighter] = React.useState<Highlighter | null>(null)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
-  const pendingCaret = React.useRef<number | null>(null)
 
   React.useEffect(() => {
     let cancelled = false
@@ -65,47 +64,6 @@ export function CodeEditor({
       return null
     }
   }, [highlighter, code, language])
-
-  // Restore the caret after an edit we performed ourselves (Tab insertion).
-  React.useEffect(() => {
-    const pos = pendingCaret.current
-    if (pos == null) return
-    pendingCaret.current = null
-    const el = textareaRef.current
-    if (el) el.setSelectionRange(pos, pos)
-  }, [value])
-
-  const emitChange = (el: HTMLTextAreaElement, next: string, caret: number) => {
-    el.value = next
-    pendingCaret.current = caret
-    onChange?.({
-      target: el,
-      currentTarget: el,
-    } as React.ChangeEvent<HTMLTextAreaElement>)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key !== 'Tab' || readOnly) return
-    const el = e.currentTarget
-    const start = el.selectionStart
-    const end = el.selectionEnd
-    e.preventDefault()
-
-    if (e.shiftKey) {
-      // Outdent the line the caret sits on.
-      const lineStart = value.lastIndexOf('\n', start - 1) + 1
-      const removed = value.slice(lineStart).match(/^ {1,2}/)?.[0].length ?? 0
-      if (!removed) return
-      emitChange(
-        el,
-        value.slice(0, lineStart) + value.slice(lineStart + removed),
-        Math.max(lineStart, start - removed),
-      )
-      return
-    }
-
-    emitChange(el, value.slice(0, start) + '  ' + value.slice(end), start + 2)
-  }
 
   // Both layers must lay text out identically.
   const textStyle: React.CSSProperties = {
@@ -155,7 +113,6 @@ export function CodeEditor({
           aria-label={label}
           value={value}
           onChange={onChange}
-          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           readOnly={readOnly}
           spellCheck={false}
